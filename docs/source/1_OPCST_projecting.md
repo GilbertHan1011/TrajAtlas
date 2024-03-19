@@ -112,7 +112,7 @@ sc.pl.umap(adata,color=["group","pseduoPred","pred_level2_anno","pred_level3_ann
     /home/gilberthan/anaconda3/envs/scarches/lib/python3.8/site-packages/scanpy/plotting/_tools/scatterplots.py:392: UserWarning: No data for colormapping provided via 'c'. Parameters 'cmap' will be ignored
       cax = scatter(
 
-![png](output_17_1.png)
+![png](image/output_17_1.png)
 
 ```python
 sc.pl.umap(adata,color=['pred_lineage_fibro', 'pred_lineage_lepr', 'pred_lineage_msc', 'pred_lineage_chondro'])
@@ -127,7 +127,7 @@ sc.pl.umap(adata,color=['pred_lineage_fibro', 'pred_lineage_lepr', 'pred_lineage
     /home/gilberthan/anaconda3/envs/scarches/lib/python3.8/site-packages/scanpy/plotting/_tools/scatterplots.py:392: UserWarning: No data for colormapping provided via 'c'. Parameters 'cmap' will be ignored
       cax = scatter(
 
-![png](output_18_1.png)
+![png](image/output_18_1.png)
 
 From the figure above, it is evident that our datasets primarily consist of LepR+ BMSC OPCST. As our focus lies solely on the osteogenesis process, we subtracted the LepR+ BMSC lineage from these datasets.
 
