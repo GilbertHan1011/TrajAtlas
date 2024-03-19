@@ -1,0 +1,9 @@
+128ef849a5301f011aeeca0b450ca66d13a1961d 20164 TrajAtlas-0.1.0-py3-none-any.whl
+4b4136b6430a121042a7f6683aa75c6c4dbae3a8 20163 TrajAtlas-0.1.1-py3-none-any.whl
+fe63e0261cd841f8be71e612ebcd20560e3a6f14 20164 TrajAtlas-0.1.2-py3-none-any.whl
+a1db9869b8ea15865f9e0dbac0c01e2d211a0645 63185370 TrajAtlas-0.1.3-py3-none-any.whl
+1263ec1af82d01205a188819ea2d084e4c3c87f4 63167004 trajMap-0.0.10-py3-none-any.whl
+7cb0c3460b733e5bb821acab1c564fef9a335f1d 63163724 trajMap-0.0.7-py3-none-any.whl
+fc84f4f2483207bae132d768d7cc8bea6db18336 63163759 trajMap-0.0.8-py3-none-any.whl
+b0dc9cd9f5e95d3ae6fe50c588bd35d282cd190a 56711852 trajMap-0.0.9-py3-none-any.whl
+911dd206d4d77ff12c15bb61fa6c762bf8829dcc 63167130 trajMap-0.1.0-py3-none-any.whl
