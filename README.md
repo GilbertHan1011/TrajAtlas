@@ -3,7 +3,7 @@
 </p>
 
 <h1> <p align="center">
-    Unraveling multi-scale differentiation heterogenity with trajectory-centric Framework 
+    Unraveling multi-scale differentiation heterogenity with trajectory-centric framework 
 </p> </h1>  
 
 <p align="center">

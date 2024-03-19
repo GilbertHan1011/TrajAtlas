@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trajMap"
+version = "0.1.0"
+authors = [
+  { name="Gilbert Han", email="gilberthan1011@gmail.com" },
+]
+description = "trajMap test"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+
+dependencies = [
+	"anndata>=0.8.0",
+	"numpy>=1.23.5",
+	"scipy>=1.9.3",
+	"joblib>=1.2.0",
+	"pandas==1.5.3",
+	"scvi>=0.6.8",
+	"scarches>=0.5.6",
+	"tensorflow>=2.11.0",
+	"scanpy>=1.9.1"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/GilbertHan1011/Macro_osteo_comm"
+"Bug Tracker" = "https://github.com/GilbertHan1011/Macro_osteo_comm/issues"
+
+
+
+[tool.setuptools.packages.find]
+# scanning for namespace packages is true by default in pyproject.toml, so
+# you do NOT need to include the following line.
+namespaces = true
+where = ["src"]
+
+[tool.setuptools.package-data]
+"trajMap.datasets" = ["*.h5ad","*.csv"]
+"trajMap.datasets.scanvi_chondro" = ["*.pt"]
+"trajMap.datasets.scanvi_lepr" = ["*.pt"]
+"trajMap.datasets.scanvi_mes" = ["*t"]
+"trajMap.datasets.pseduoPred" = ["*.pb"]
+"trajMap.datasets.pseduoPred.variables" = ["variables*"]
+

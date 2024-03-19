@@ -1,0 +1,12 @@
+LICENSE
+README.md
+pyproject.toml
+src/TrajAtlas.egg-info/PKG-INFO
+src/TrajAtlas.egg-info/SOURCES.txt
+src/TrajAtlas.egg-info/dependency_links.txt
+src/TrajAtlas.egg-info/requires.txt
+src/TrajAtlas.egg-info/top_level.txt
+src/TrajDiff/__init__.py
+src/TrajDiff/trajDiff.py
+src/trajMap/src/trajMap/__init__.py
+src/trajMap/src/trajMap/main.py

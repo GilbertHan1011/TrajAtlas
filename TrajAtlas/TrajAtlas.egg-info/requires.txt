@@ -1,0 +1,13 @@
+anndata>=0.8.0
+numpy>=1.23.5
+scipy>=1.10.1
+joblib>=1.2.0
+pandas==2.0.0
+scvi>=0.6.8
+scarches>=0.5.6
+tensorflow>=2.11.0
+scanpy>=1.9.1
+mudata>=0.2.3
+tqdm>=4.65.0
+statsmodels>=0.14.0
+PyComplexHeatmap>=1.6.4

@@ -1,0 +1,9 @@
+anndata>=0.8.0
+numpy>=1.23.5
+scipy>=1.9.3
+joblib>=1.2.0
+pandas>=1.5.3
+scvi>=0.6.8
+scarches>=0.5.6
+tensorflow>=2.11.0
+scanpy>=1.9.1
