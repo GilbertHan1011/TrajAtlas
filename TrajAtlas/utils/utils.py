@@ -28,7 +28,7 @@ def process_subset(i, j, sampleDict, lineageDict, adata, timeDict, timeBin, cell
     bin_mask=geneMat.groupby("dpt_bin").size()<5
     gene_agg[bin_mask]=np.nan
     geneMat=geneMat.loc[:,varName]
-    pearsonCoorDict = {}
+    pearsonCorrDict = {}
     maxRowsDict={}
     sumValuesDict={}
     for k in range(geneMat.shape[1]):
@@ -38,23 +38,23 @@ def process_subset(i, j, sampleDict, lineageDict, adata, timeDict, timeBin, cell
             geneName = varName[k]
             maxRowsDict[geneName]=0
             sumValuesDict[geneName]=0
-            pearsonCoorDict[geneName]=0
+            pearsonCorrDict[geneName]=0
         else:
             pearson, _ = pearsonr(geneArr, np.array(timeVal))
             geneName = varName[k]
-            pearsonCoorDict[geneName] = pearson
+            pearsonCorrDict[geneName] = pearson
             max_row = geneAggArr.idxmax()
             maxRowsDict[geneName] = max_row
             sumValuesDict[geneName]=geneAggArr.sum()
     
-    pearsonCoorDf = pd.DataFrame.from_dict(pearsonCoorDict, orient="index").fillna(0)
-    pearsonCoorDf.columns = [i + "_sep_" + j]
+    pearsonCorrDf = pd.DataFrame.from_dict(pearsonCorrDict, orient="index").fillna(0)
+    pearsonCorrDf.columns = [i + "_sep_" + j]
     maxRowDf = pd.DataFrame.from_dict(maxRowsDict, orient="index").fillna(0)
     maxRowDf.columns = [i + "_sep_" + j]
     sumValDf = pd.DataFrame.from_dict(sumValuesDict, orient="index").fillna(0)
     sumValDf.columns = [i + "_sep_" + j]
   
-    return pearsonCoorDf, maxRowDf, sumValDf
+    return pearsonCorrDf, maxRowDf, sumValDf
 
 def getAttribute(adata,lineage: list or None = ["Fibroblast", "LepR_BMSC", "MSC", "Chondro"],
                  peudotime_key="pseduoPred",n_jobs=-1,cell_threshold: int or None=40):
@@ -97,39 +97,39 @@ def getAttribute(adata,lineage: list or None = ["Fibroblast", "LepR_BMSC", "MSC"
     #=form mudata
     exprAdata=sc.AnnData(expr.T)
     peakAdata=sc.AnnData(peak.T)
-    coorAdata=sc.AnnData(corr.T)
-    coor_mod = np.where(corr >= 0, np.sqrt(corr), -np.sqrt(-corr))
-    coor_mod=pd.DataFrame(coor_mod)
-    coor_mod.columns=coor_mod.columns
-    coor_mod.index=coor_mod.index
+    corrAdata=sc.AnnData(corr.T)
+    corr_mod = np.where(corr >= 0, np.sqrt(corr), -np.sqrt(-corr))
+    corr_mod=pd.DataFrame(corr_mod)
+    corr_mod.columns=corr_mod.columns
+    corr_mod.index=corr_mod.index
     expr_mod = expr.apply(lambda row: (row) / (row.max()), axis=1)
     exprAdata=sc.AnnData(expr.T)
     peakAdata=sc.AnnData(peak.T)
-    coorAdata=sc.AnnData(corr.T)
+    corrAdata=sc.AnnData(corr.T)
     exprAdata.layers["mod"]=expr_mod.T
     peakAdata.layers["mod"]=peak.T
-    coorAdata.layers["mod"]=coor_mod.T
-    tvmap=mu.MuData({"corr":coorAdata, "expr": exprAdata,"peak":peakAdata})
+    corrAdata.layers["mod"]=corr_mod.T
+    tvmap=mu.MuData({"corr":corrAdata, "expr": exprAdata,"peak":peakAdata})
     return(tvmap)
 
 def makeDotTable(tvMap,gene,sample):
     exprMod=tvMap["expr"].layers["mod"]
     peakMod=tvMap["peak"].layers["mod"]
-    corrMod=tvMap["coor"].layers["mod"]
+    corrMod=tvMap["corr"].layers["mod"]
     exprMod=pd.DataFrame(tvMap["expr"].layers["mod"],index=tvMap.obs_names,columns=tvMap["expr"].var_names).T
     peakMod=pd.DataFrame(tvMap["peak"].layers["mod"],index=tvMap.obs_names,columns=tvMap["peak"].var_names).T
-    corrMod=pd.DataFrame(tvMap["coor"].layers["mod"],index=tvMap.obs_names,columns=tvMap["coor"].var_names).T
-    selectCoor=corrMod.loc[gene]
+    corrMod=pd.DataFrame(tvMap["corr"].layers["mod"],index=tvMap.obs_names,columns=tvMap["corr"].var_names).T
+    selectCorr=corrMod.loc[gene]
     selectExpr=exprMod.loc[gene]
     selectPeak=peakMod.loc[gene]
-    selectCoor=selectCoor.loc[:,sample]
+    selectCorr=selectCorr.loc[:,sample]
     selectExpr=selectExpr.loc[:,sample]
     selectPeak=selectPeak.loc[:,sample]
-    coorLong=selectCoor.stack().reset_index(name="Corr")
+    corrLong=selectCorr.stack().reset_index(name="Corr")
     exprLong=selectExpr.stack().reset_index(name="Expr")
     peakLong=selectPeak.stack().reset_index(name="Peak")
     peakLong['Stage']=peakLong.Peak.apply(lambda x:'End' if x>=7 else 'Middle' if x >= 3 else 'Start')
-    combineDf=coorLong
+    combineDf=corrLong
     combineDf["Expr"]=exprLong['Expr']
     combineDf["Peak"]=peakLong['Stage']
     return(combineDf)

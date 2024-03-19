@@ -229,7 +229,7 @@ def substractLineageAdata(adata, lineage: list or None = ["Fibroblast", "LepR_BM
     values = []
     for key in lineage:
         if key not in lineageDict:
-            raise ValueError(f"Invalid lineage '{key}' provided. Lineage argument must contain only the valid lineages: 'Fibro', 'Lepr', 'MSC', 'Chondro'.")
+            raise ValueError(f"Invalid lineage '{key}' provided. Lineage argument must contain only the valid lineages: 'Fibroblast', 'LepR_BMSC', 'MSC', 'Chondro'.")
         values.append(lineageDict[key])
     adata.obs[values] = adata.obs[values].astype("bool")
     boolVal = adata.obs[values].apply(lambda row: row.any(), axis=1)
