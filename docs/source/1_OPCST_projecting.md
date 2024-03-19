@@ -34,88 +34,20 @@ adata.layers["counts"][0:5,0:5].toarray()
 adata.obs[['group', 'sample']]
 ```
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
 
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }`</style>`
-
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>group</th>
-      <th>sample</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>AAACCCATCCAATCCC-1_1</th>
-      <td>MA</td>
-      <td>BmscAging_Young_MA1</td>
-    </tr>
-    <tr>
-      <th>AAACCCATCTCAGTCC-1_1</th>
-      <td>MA</td>
-      <td>BmscAging_Young_MA1</td>
-    </tr>
-    <tr>
-      <th>AAACGCTAGTATGACA-1_1</th>
-      <td>MA</td>
-      <td>BmscAging_Young_MA1</td>
-    </tr>
-    <tr>
-      <th>AAACGCTGTACGAGCA-1_1</th>
-      <td>MA</td>
-      <td>BmscAging_Young_MA1</td>
-    </tr>
-    <tr>
-      <th>AAAGAACCAACCCTCT-1_1</th>
-      <td>MA</td>
-      <td>BmscAging_Young_MA1</td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td>...</td>
-      <td>...</td>
-    </tr>
-    <tr>
-      <th>TTTGATCAGAGCTTTC-1_14</th>
-      <td>Young</td>
-      <td>BmscAging_Young_Young5</td>
-    </tr>
-    <tr>
-      <th>TTTGATCGTAAGAACT-1_14</th>
-      <td>Young</td>
-      <td>BmscAging_Young_Young5</td>
-    </tr>
-    <tr>
-      <th>TTTGATCTCACCTGTC-1_14</th>
-      <td>Young</td>
-      <td>BmscAging_Young_Young5</td>
-    </tr>
-    <tr>
-      <th>TTTGGTTTCTCTCCGA-1_14</th>
-      <td>Young</td>
-      <td>BmscAging_Young_Young5</td>
-    </tr>
-    <tr>
-      <th>TTTGTTGAGGCCACCT-1_14</th>
-      <td>Young</td>
-      <td>BmscAging_Young_Young5</td>
-    </tr>
-  </tbody>
-</table>
-<p>15079 rows × 2 columns</p>
-</div>
+|                   | group | sample               |
+|-------------------|-------|----------------------|
+| AAACCCATCCAATCCC-1_1 | MA    | BmscAging_Young_MA1 |
+| AAACCCATCTCAGTCC-1_1 | MA    | BmscAging_Young_MA1 |
+| AAACGCTAGTATGACA-1_1 | MA    | BmscAging_Young_MA1 |
+| AAACGCTGTACGAGCA-1_1 | MA    | BmscAging_Young_MA1 |
+| AAAGAACCAACCCTCT-1_1 | MA    | BmscAging_Young_MA1 |
+| ...               | ...   | ...                  |
+| TTTGATCAGAGCTTTC-1_14 | Young | BmscAging_Young_Young5 |
+| TTTGATCGTAAGAACT-1_14 | Young | BmscAging_Young_Young5 |
+| TTTGATCTCACCTGTC-1_14 | Young | BmscAging_Young_Young5 |
+| TTTGGTTTCTCTCCGA-1_14 | Young | BmscAging_Young_Young5 |
+| TTTGTTGAGGCCACCT-1_14 | Young | BmscAging_Young_Young5 |
 
 ## Projection
 
@@ -241,20 +173,6 @@ groupObs.index=tvMap.obs_names
 groupObs
 ```
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }`</style>`
-
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -316,7 +234,7 @@ groupObs
     </tr>
   </tbody>
 </table>
-</div>
+
 
 We employed PyComplexHeatmap to generate a dot plot, allowing the selection of genes and samples for visualization. Specifically, we chose genes associated with Extracellular Matrix Organization. Our study revealed that these genes exhibit upregulation during the entire differentiation process in the young age of LepR+ BMSCs.
 
