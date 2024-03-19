@@ -58,6 +58,7 @@ def process_subset(i, j, sampleDict, lineageDict, adata, timeDict, timeBin, cell
 
 def getAttribute(adata,lineage: list or None = ["Fibroblast", "LepR_BMSC", "MSC", "Chondro"],
                  peudotime_key="pseduoPred",n_jobs=-1,cell_threshold: int or None=40):
+    adata.obs[['pred_lineage_lepr', 'pred_lineage_msc', 'pred_lineage_chondro',"pred_lineage_fibro"]]=adata.obs[['pred_lineage_lepr', 'pred_lineage_msc', 'pred_lineage_chondro',"pred_lineage_fibro"]].astype("bool")
     lineageDict={"Chondro":adata.obs.index[adata.obs["pred_lineage_chondro"]],
             "LepR_BMSC":adata.obs.index[adata.obs["pred_lineage_lepr"]],
             "Fibroblast":adata.obs.index[adata.obs["pred_lineage_fibro"]],
