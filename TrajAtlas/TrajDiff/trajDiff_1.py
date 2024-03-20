@@ -645,11 +645,13 @@ class Tdiff:
 
         sample_adata.var["SpatialFDR"] = np.nan
         sample_adata.var.loc[keep_nhoods, "SpatialFDR"] = adjp
+
     def permute_test_window(self,
                             range_df, 
                             n=100, 
                             window_size=10, 
-                            step_size=5):
+                            step_size=5,
+                            times:int=20):
         range_data = range_df.values
     
         permute_test_true_window = {}
@@ -677,7 +679,7 @@ class Tdiff:
             length_df=length_df.T
             length_df.columns=["true","false"]
             length_df["rate"]=length_df["true"]/(length_df["false"]+length_df["true"])
-    
+        length_df=self._test_binom(length_df,times=times)
         return length_df
 
     def _test_binom(self,
