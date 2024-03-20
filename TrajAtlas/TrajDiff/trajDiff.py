@@ -13,6 +13,9 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 import statsmodels.api as sm
 import scanpy as sc
+
+from TrajAtlas.TrajDiff.trajdiff_utils import _test_binom
+
 pd.DataFrame.iteritems = pd.DataFrame.items
 try:
     from rpy2.robjects import conversion, numpy2ri, pandas2ri
@@ -25,7 +28,36 @@ from scipy.sparse import csr_matrix
 from sklearn.metrics.pairwise import euclidean_distances
 
 class Tdiff:
-    """Python implementation of tdiff."""
+    """Kernel which computes a transition matrix based on RNA velocity.
+
+    .. seealso::
+        - See :doc:`../../../notebooks/tutorials/kernels/200_rna_velocity` on how to
+          compute the :attr:`~cellrank.kernels.VelocityKernel.transition_matrix` based on RNA velocity.
+
+    This borrows ideas from both :cite:`manno:18` and :cite:`bergen:20`. In short, for each cell :math:`i`, we compute
+    transition probabilities :math:`T_{i, j}` to each cell :math:`j` in the neighborhood of :math:`i`. We quantify
+    how much the velocity vector :math:`v_i` of cell :math:`i` points towards each of its nearst neighbors. For
+    this comparison, we support various schemes including cosine similarity and pearson correlation.
+
+    Parameters
+    ----------
+    %(adata)s
+    %(backward)s
+    attr
+        Attribute of :class:`~anndata.AnnData` to read from.
+    xkey
+        Key in :attr:`~anndata.AnnData.layers` or :attr:`~anndata.AnnData.obsm`
+        where expected gene expression counts are stored.
+    vkey
+        Key in :attr:`~anndata.AnnData.layers` or :attr:`~anndata.AnnData.obsm` where velocities are stored.
+    gene_subset
+        List of genes to be used to compute transition probabilities.
+        If not specified, genes from :attr:`adata.var['{vkey}_genes'] <anndata.AnnData.var>` are used.
+        This feature is only available when reading from :attr:`anndata.AnnData.layers` and will be ignored otherwise.
+    kwargs
+        Keyword arguments for the :class:`~cellrank.kernels.Kernel`.
+    """
+
 
     def __init__(self):
         pass
@@ -645,6 +677,9 @@ class Tdiff:
 
         sample_adata.var["SpatialFDR"] = np.nan
         sample_adata.var.loc[keep_nhoods, "SpatialFDR"] = adjp
+
+
+
     def permute_test_window(self,
                             range_df, 
                             n=100, 
@@ -677,12 +712,16 @@ class Tdiff:
             length_df=length_df.T
             length_df.columns=["true","false"]
             length_df["rate"]=length_df["true"]/(length_df["false"]+length_df["true"])
-    
+        
         return length_df
+
+
+
     def permute_test_point(self,
                            mdata: MuData,
                             n:int = 100,
-                           include_null:bool = True
+                           include_null:bool = True,
+                           times:int = 20
                           ):
         try:
             sample_adata = mdata["tdiff"]
@@ -750,10 +789,9 @@ class Tdiff:
                 length_df=length_df.T
                 length_df.columns=["true","false","meanLogChange"]
             length_df["rate"]=length_df["true"]/(length_df["false"]+length_df["true"])
-    
+        length_df=self._test_binom(length_df,times=times)
         return length_df
 
-    
     def make_range(self,
         mdata: MuData,
         time_col: str|None=None,
@@ -796,27 +834,7 @@ class Tdiff:
             sample_adata.var["Accept"]=sample_adata.var["SpatialFDR"]<FDR
             sample_adata.var["logChange"]=sample_adata.var["logCPM"]*sample_adata.var["logFC"]
 
-    def test_binom(self,
-                     lenDf,
-                     times:int = 20):
-        sumVal=lenDf["true"]+lenDf["false"]
-        trueVal=lenDf["true"]
-        null=lenDf["null"]
-        p_val_list=[]
-        for i in range(len(lenDf)):
-            if null[i]==0:
-                null[i]=1/(sumVal[i]*times) # minimal
-            p_val= 1- binom.cdf(trueVal[i], sumVal[i], null[i])
-            if trueVal[i] == 0:
-                p_val=1
-            #p_val=1-poisson.cdf(rate[i], null[i])
-            p_val_list.append(p_val)
-        lenDf["binom_p"]=p_val_list
-        return(lenDf)
 
-
-
-        
     def make_da_cpm(
         self,
         mdata: MuData,
