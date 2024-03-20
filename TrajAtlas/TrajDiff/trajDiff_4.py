@@ -646,12 +646,29 @@ class Tdiff:
         sample_adata.var["SpatialFDR"] = np.nan
         sample_adata.var.loc[keep_nhoods, "SpatialFDR"] = adjp
 
+    def _test_binom(self,
+                    length_df,
+                    times:int = 20):
+        sumVal = length_df["true"] + length_df["false"]
+        trueVal=length_df["true"]
+        null=length_df["null"]
+        p_val_list=[]
+        for i in range(len(length_df)):
+            if null[i]==0:
+                null[i]=1/(sumVal[i]*times) # minimal
+            p_val= 1- binom.cdf(trueVal[i], sumVal[i], null[i])
+            if trueVal[i] == 0:
+                p_val=1
+            #p_val=1-poisson.cdf(rate[i], null[i])
+            p_val_list.append(p_val)
+        length_df["binom_p"]=p_val_list
+        return(length_df)
+
     def permute_test_window(self,
                             range_df, 
                             n=100, 
                             window_size=10, 
-                            step_size=5,
-                            times:int=20):
+                            step_size=5):
         range_data = range_df.values
     
         permute_test_true_window = {}
@@ -679,27 +696,10 @@ class Tdiff:
             length_df=length_df.T
             length_df.columns=["true","false"]
             length_df["rate"]=length_df["true"]/(length_df["false"]+length_df["true"])
-        length_df=self._test_binom(length_df,times=times)
+        
         return length_df
 
-    def _test_binom(self,
-                    length_df,
-                    times:int = 20):
-        print("test")
-        sumVal = length_df["true"] + length_df["false"]
-        trueVal=length_df["true"]
-        null=length_df["null"]
-        p_val_list=[]
-        for i in range(len(length_df)):
-            if null[i]==0:
-                null[i]=1/(sumVal[i]*times) # minimal
-            p_val= 1- binom.cdf(trueVal[i], sumVal[i], null[i])
-            if trueVal[i] == 0:
-                p_val=1
-            #p_val=1-poisson.cdf(rate[i], null[i])
-            p_val_list.append(p_val)
-        length_df["binom_p"]=p_val_list
-        return(length_df)
+
 
     def permute_test_point(self,
                            mdata: MuData,
@@ -773,11 +773,8 @@ class Tdiff:
                 length_df=length_df.T
                 length_df.columns=["true","false","meanLogChange"]
             length_df["rate"]=length_df["true"]/(length_df["false"]+length_df["true"])
-    
+        length_df=self._test_binom(length_df,times=times)
         return length_df
-
-    
-
 
     def make_range(self,
         mdata: MuData,
