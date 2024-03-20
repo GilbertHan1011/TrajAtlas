@@ -23,7 +23,6 @@ exceptiongroup==1.1.0
 executing==1.2.0
 fonttools==4.38.0
 fsspec==2022.11.0
-google-auth==2.15.0
 grpcio==1.51.1
 imagesize==1.4.1
 importlib-resources==5.10.2
