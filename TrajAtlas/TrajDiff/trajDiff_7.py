@@ -28,7 +28,36 @@ from scipy.sparse import csr_matrix
 from sklearn.metrics.pairwise import euclidean_distances
 
 class Tdiff:
-    """Python implementation of tdiff."""
+    """Kernel which computes a transition matrix based on RNA velocity.
+
+    .. seealso::
+        - See :doc:`../../../notebooks/tutorials/kernels/200_rna_velocity` on how to
+          compute the :attr:`~cellrank.kernels.VelocityKernel.transition_matrix` based on RNA velocity.
+
+    This borrows ideas from both :cite:`manno:18` and :cite:`bergen:20`. In short, for each cell :math:`i`, we compute
+    transition probabilities :math:`T_{i, j}` to each cell :math:`j` in the neighborhood of :math:`i`. We quantify
+    how much the velocity vector :math:`v_i` of cell :math:`i` points towards each of its nearst neighbors. For
+    this comparison, we support various schemes including cosine similarity and pearson correlation.
+
+    Parameters
+    ----------
+    %(adata)s
+    %(backward)s
+    attr
+        Attribute of :class:`~anndata.AnnData` to read from.
+    xkey
+        Key in :attr:`~anndata.AnnData.layers` or :attr:`~anndata.AnnData.obsm`
+        where expected gene expression counts are stored.
+    vkey
+        Key in :attr:`~anndata.AnnData.layers` or :attr:`~anndata.AnnData.obsm` where velocities are stored.
+    gene_subset
+        List of genes to be used to compute transition probabilities.
+        If not specified, genes from :attr:`adata.var['{vkey}_genes'] <anndata.AnnData.var>` are used.
+        This feature is only available when reading from :attr:`anndata.AnnData.layers` and will be ignored otherwise.
+    kwargs
+        Keyword arguments for the :class:`~cellrank.kernels.Kernel`.
+    """
+
 
     def __init__(self):
         pass
@@ -760,7 +789,7 @@ class Tdiff:
                 length_df=length_df.T
                 length_df.columns=["true","false","meanLogChange"]
             length_df["rate"]=length_df["true"]/(length_df["false"]+length_df["true"])
-        length_df=self._test_binom(length_df,times=times)
+        length_df= _test_binom(length_df,times=times)
         return length_df
 
     def make_range(self,
