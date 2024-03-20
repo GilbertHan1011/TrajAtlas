@@ -99,5 +99,4 @@ statsmodels>=0.14.0
 PyComplexHeatmap>=1.6.4
 lightgbm
 scikit-learn
-rpy2
 optax==0.1.5
