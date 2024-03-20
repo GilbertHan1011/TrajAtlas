@@ -13,6 +13,9 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 import statsmodels.api as sm
 import scanpy as sc
+
+from TrajAtlas.TrajDiff.trajdiff_utils import _test_binom
+
 pd.DataFrame.iteritems = pd.DataFrame.items
 try:
     from rpy2.robjects import conversion, numpy2ri, pandas2ri
@@ -646,23 +649,7 @@ class Tdiff:
         sample_adata.var["SpatialFDR"] = np.nan
         sample_adata.var.loc[keep_nhoods, "SpatialFDR"] = adjp
 
-    def _test_binom(self,
-                    length_df,
-                    times:int = 20):
-        sumVal = length_df["true"] + length_df["false"]
-        trueVal=length_df["true"]
-        null=length_df["null"]
-        p_val_list=[]
-        for i in range(len(length_df)):
-            if null[i]==0:
-                null[i]=1/(sumVal[i]*times) # minimal
-            p_val= 1- binom.cdf(trueVal[i], sumVal[i], null[i])
-            if trueVal[i] == 0:
-                p_val=1
-            #p_val=1-poisson.cdf(rate[i], null[i])
-            p_val_list.append(p_val)
-        length_df["binom_p"]=p_val_list
-        return(length_df)
+
 
     def permute_test_window(self,
                             range_df, 
