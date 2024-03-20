@@ -6,7 +6,7 @@ rich==13.0.0
 session-info==1.0.0
 six==1.16.0
 Sphinx==7.1.2
-sphinx-autobuild==2024.2.4
+sphinx-autobuild==2021.3.14
 sphinx-markdown-tables==0.0.17
 sphinx-rtd-theme==0.2.4
 sphinx-basic-ng==1.0.0b2
