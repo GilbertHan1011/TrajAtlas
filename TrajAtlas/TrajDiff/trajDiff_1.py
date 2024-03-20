@@ -815,8 +815,6 @@ class Tdiff:
         return(lenDf)
 
 
-
-        
     def make_da_cpm(
         self,
         mdata: MuData,

@@ -5,10 +5,8 @@ import numpy as np
 from scipy.sparse import csr_matrix
 import scvi
 import scarches as sca
-import tensorflow as tf
 from scipy.stats import pearsonr
 import anndata as ad
-from scipy.stats import ttest_ind
 from scipy.stats import norm
 from sklearn.neighbors import KNeighborsTransformer
 import joblib
@@ -164,6 +162,33 @@ def formOsteoAdata(adata, batchVal="sample",missing_threshold=500,variableFeatur
     return(adata_merged)
 
 def ProjectData(adata,modelPath="Default",max_epoch=100):
+    """Annotates ``query_adata`` cells with an input trained weighted KNN classifier.
+    Parameters
+    ----------
+    query_adata: :class:`~anndata.AnnData`
+        Annotated dataset to be used to queryate KNN classifier. Embedding to be used
+    query_adata_emb: str
+        Name of the obsm layer to be used for label transfer. If set to "X",
+        query_adata.X will be used
+    ref_adata_obs: :class:`pd.DataFrame`
+        obs of ref Anndata
+    label_keys: str
+        Names of the columns to be used as target variables (e.g. cell_type) in ``query_adata``.
+    knn_model: :class:`~sklearn.neighbors._graph.KNeighborsTransformer`
+        knn model trained on reference adata with weighted_knn_trainer function
+    threshold: float
+        Threshold of uncertainty used to annotating cells as "Unknown". cells with
+        uncertainties higher than this value will be annotated as "Unknown".
+        Set to 1 to keep all predictions. This enables one to later on play
+        with thresholds.
+    pred_unknown: bool
+        ``False`` by default. Whether to annotate any cell as "unknown" or not.
+        If `False`, ``threshold`` will not be used and each cell will be annotated
+        with the label which is the most common in its ``n_neighbors`` nearest cells.
+    mode: str
+        Has to be one of "paper" or "package". If mode is set to "package",
+        uncertainties will be 1 - P(pred_label), otherwise it will be 1 - P(true_label).
+    """
     adata_immediate=formOsteoAdata(adata)
     if isinstance(modelPath,str):
         if modelPath=="Default":
