@@ -23,7 +23,7 @@ numpy>=1.23.5
 scipy>=1.10.1
 joblib>=1.2.0
 pandas==2.0.0
-scvi-tools
+scvi-tools==0.20.3
 scarches==0.6.1
 tensorflow==2.13.0
 scanpy==1.9.1
@@ -34,3 +34,4 @@ PyComplexHeatmap==1.6.4
 lightgbm
 scikit-learn
 optax==0.1.5
+pytorch-lightning==1.9.5
