@@ -72,9 +72,8 @@ sphinxcontrib-jquery==4.1
 sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==1.0.7
 sphinxcontrib-serializinghtml==1.1.10
-sphinxcontrib-bibtex>=2.3.0,
-sphinxcontrib-spelling>=7.6.2
-furo>=2022.09.29
+sphinxcontrib-bibtex==2.6.0
+furo==2024.1.29
 stack-data==0.6.2
 stdlib-list==0.8.0
 texttable==1.6.7
