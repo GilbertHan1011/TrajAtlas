@@ -34,4 +34,3 @@ PyComplexHeatmap==1.6.4
 lightgbm
 scikit-learn
 optax==0.1.5
-pytorch-lightning==1.7.7
