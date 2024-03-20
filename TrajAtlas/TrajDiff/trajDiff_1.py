@@ -679,10 +679,30 @@ class Tdiff:
             length_df["rate"]=length_df["true"]/(length_df["false"]+length_df["true"])
     
         return length_df
+
+    def _test_binom(self,
+                    length_df,
+                    times:int = 20):
+    sumVal=length_df["true"]+length_df["false"]
+    trueVal=length_df["true"]
+    null=length_df["null"]
+    p_val_list=[]
+    for i in range(len(length_df)):
+        if null[i]==0:
+            null[i]=1/(sumVal[i]*times) # minimal
+        p_val= 1- binom.cdf(trueVal[i], sumVal[i], null[i])
+        if trueVal[i] == 0:
+            p_val=1
+        #p_val=1-poisson.cdf(rate[i], null[i])
+        p_val_list.append(p_val)
+    length_df["binom_p"]=p_val_list
+    return(length_df)
+
     def permute_test_point(self,
                            mdata: MuData,
                             n:int = 100,
-                           include_null:bool = True
+                           include_null:bool = True,
+                           times:int = 20
                           ):
         try:
             sample_adata = mdata["tdiff"]
@@ -754,6 +774,8 @@ class Tdiff:
         return length_df
 
     
+
+
     def make_range(self,
         mdata: MuData,
         time_col: str|None=None,
@@ -795,24 +817,6 @@ class Tdiff:
         if not only_range:
             sample_adata.var["Accept"]=sample_adata.var["SpatialFDR"]<FDR
             sample_adata.var["logChange"]=sample_adata.var["logCPM"]*sample_adata.var["logFC"]
-
-    def test_binom(self,
-                     lenDf,
-                     times:int = 20):
-        sumVal=lenDf["true"]+lenDf["false"]
-        trueVal=lenDf["true"]
-        null=lenDf["null"]
-        p_val_list=[]
-        for i in range(len(lenDf)):
-            if null[i]==0:
-                null[i]=1/(sumVal[i]*times) # minimal
-            p_val= 1- binom.cdf(trueVal[i], sumVal[i], null[i])
-            if trueVal[i] == 0:
-                p_val=1
-            #p_val=1-poisson.cdf(rate[i], null[i])
-            p_val_list.append(p_val)
-        lenDf["binom_p"]=p_val_list
-        return(lenDf)
 
 
     def make_da_cpm(
