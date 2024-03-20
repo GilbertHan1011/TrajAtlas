@@ -23,9 +23,8 @@ numpy>=1.23.5
 scipy>=1.10.1
 joblib>=1.2.0
 pandas==2.0.0
-scvi-tools==0.19.0
-scvi==0.6.8
-scarches==0.5.9
+scvi-tools==0.20.3
+scarches==0.6.1
 tensorflow==2.13.0
 scanpy==1.9.1
 mudata==0.2.3

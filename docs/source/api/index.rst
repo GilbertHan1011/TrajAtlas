@@ -11,3 +11,4 @@ Import TrajAtlas as::
     :maxdepth: 2
 
     trajdiff
+    model

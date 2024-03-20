@@ -1,8 +1,7 @@
-.. module:: TrajAtlas.TrajDiff
+.. module:: TrajAtlas.model
 
-TDiff
+Model
 =======
-A class for differential pseudotime analysis. 
 Kernels compute cell-cell transition probabilities based on various input data modalities, including molecular
 similarity, RNA velocity :cite:`manno:18`, experimental time points, and many more. They come with methods
 for high-level, qualitative visualization, including vector field or random walk plots. For quantitative analysis of
@@ -15,7 +14,7 @@ takes in multi-view single-cell data and outputs a cell-cell transition matrix.
 .. currentmodule:: TrajAtlas
 
 .. autosummary::
-    :toctree: _autosummary/TrajDiff
+    :toctree: _autosummary/model
 
-    TrajDiff.Tdiff
+    model.ProjectData
 
