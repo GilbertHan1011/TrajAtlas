@@ -13,19 +13,25 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 import statsmodels.api as sm
 import scanpy as sc
+import PyComplexHeatmap as pch
+from sklearn.preprocessing import scale
+import matplotlib.pyplot as plt
 
-from TrajAtlas.TrajDiff.trajdiff_utils import _test_binom
+from TrajAtlas.TrajDiff.trajdiff_utils_9 import _test_binom, _test_gene_binom, _test_whole_gene, _row_scale,_graph_spatial_fdr,_mergeVar
+from TrajAtlas.TrajDiff._env import _setup_rpy2
 
 pd.DataFrame.iteritems = pd.DataFrame.items
+
+from scipy.sparse import csr_matrix
+from sklearn.metrics.pairwise import euclidean_distances
+
 try:
-    from rpy2.robjects import conversion, numpy2ri, pandas2ri
-    from rpy2.robjects.packages import STAP, PackageNotInstalledError, importr
+    from rpy2.robjects import conversion
+    from rpy2.robjects.packages import STAP
 except ModuleNotFoundError:
     print(
         "[bold yellow]rpy2 is not installed. Install with [green]pip install rpy2 [yellow]to run tools with R support."
     )
-from scipy.sparse import csr_matrix
-from sklearn.metrics.pairwise import euclidean_distances
 
 class Tdiff:
     """Kernel which computes a transition matrix based on RNA velocity.
@@ -230,7 +236,7 @@ class Tdiff:
             try:
                 nhoods = adata.obsm["nhoods"]
             except KeyError:
-                print('Cannot find "nhoods" slot in adata.obsm -- please run tdiffpy.make_nhoods(adata)')
+                print('Cannot find "nhoods" slot in adata.obsm -- please run tdiff.make_nhoods(adata)')
                 raise
         # Make nhood abundance matrix
         sample_dummies = pd.get_dummies(adata.obs[sample_col])
@@ -252,7 +258,33 @@ class Tdiff:
         else:
             tdiff_mdata = MuData({feature_key: adata, "tdiff": sample_adata})
             return tdiff_mdata
-    def make_null(
+
+    def da(
+        self,
+        mdata,
+        design: str,
+        time_col: str | None = "pseduoPred",
+        model_contrasts: str | None = None,
+        subset_samples: list[str] | None = None,
+        add_intercept: bool = True,
+        feature_key: str | None = "rna",
+        shuffle_times: int | None = 20,
+        FDR:int=0.05
+    ):  
+        print("Permutation null hypothesis testing.....")
+        self._make_null(mdata, design=design,model_contrasts=model_contrasts,
+                        subset_samples=subset_samples,times=shuffle_times,feature_key=feature_key,FDR=FDR)
+        print("Running differential abundance.....")
+        self._da_nhoods(mdata, design=design,model_contrasts=model_contrasts,
+                        subset_samples=subset_samples,feature_key=feature_key)
+        print("Projecting neighborhoods to pseudotime axis.....")
+        self._make_range(mdata,time_col="pseduoPred")
+        print("Done!")
+        
+
+
+
+    def _make_null(
         self,
         mdata: MuData,
         design: str,
@@ -265,7 +297,7 @@ class Tdiff:
     ):
         null_dict={}
         for i in range(times):
-            fdr_=self.da_nhoods(mdata,design=design,model_contrasts=model_contrasts,subset_samples=subset_samples,
+            fdr_=self._da_nhoods(mdata,design=design,model_contrasts=model_contrasts,subset_samples=subset_samples,
                                add_intercept=add_intercept,feature_key=feature_key,shuffle=True,return_fdr=True)
 
             null_dict[i]=fdr_
@@ -277,7 +309,7 @@ class Tdiff:
         sample_adata.var["null"]=null_df["RowMean"]
 
     
-    def da_nhoods(
+    def _da_nhoods(
         self,
         mdata: MuData,
         design: str,
@@ -315,7 +347,7 @@ class Tdiff:
         except KeyError:
             print(
                 "[bold red]tdiff_mdata should be a MuData object with two slots:"
-                " feature_key and 'tdiff' - please run tdiffpy.count_nhoods() first"
+                " feature_key and 'tdiff' - please run tdiff.count_nhoods() first"
             )
             raise
         adata = mdata[feature_key]
@@ -376,7 +408,7 @@ class Tdiff:
 
 
         # Set up rpy2 to run edgeR
-        edgeR, limma, stats, base = self._setup_rpy2()
+        edgeR, limma, stats, base = _setup_rpy2()
 
         # Define model matrix
         if not add_intercept or model_contrasts is not None:
@@ -426,9 +458,7 @@ class Tdiff:
         mean_df.index = sample_adata.var_names[keep_nhoods]
         sample_adata.var["group1_cpm"]=mean_df.iloc[:,0]
         sample_adata.var["group2_cpm"]=mean_df.iloc[:,1]
-
-
-        
+   
         # Save outputs
         res.index = sample_adata.var_names[keep_nhoods]  # type: ignore
         if any(col in sample_adata.var.columns for col in res.columns):
@@ -437,7 +467,7 @@ class Tdiff:
         sample_adata.var = pd.concat([sample_adata.var, res], axis=1)
 
         # Run Graph spatial FDR correction
-        self._graph_spatial_fdr(sample_adata, neighbors_key=adata.uns["nhood_neighbors_key"])
+        _graph_spatial_fdr(sample_adata, neighbors_key=adata.uns["nhood_neighbors_key"])
         if return_fdr:
             return(sample_adata.var["SpatialFDR"])
 
@@ -465,7 +495,7 @@ class Tdiff:
             sample_adata = mdata["tdiff"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiffpy.count_nhoods(adata) first"
+                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         adata = mdata[feature_key]
@@ -473,7 +503,7 @@ class Tdiff:
         # Check value is not numeric
         if pd.api.types.is_numeric_dtype(adata.obs[anno_col]):
             raise ValueError(
-                "adata.obs[anno_col] is not of categorical type - please use tdiffpy.utils.annotate_nhoods_continuous for continuous variables"
+                "adata.obs[anno_col] is not of categorical type - please use tdiff.utils.annotate_nhoods_continuous for continuous variables"
             )
 
         anno_dummies = pd.get_dummies(adata.obs[anno_col])
@@ -503,14 +533,14 @@ class Tdiff:
         """
         if "tdiff" not in mdata.mod:
             raise ValueError(
-                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiffpy.count_nhoods(adata) first"
+                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
             )
         adata = mdata[feature_key]
 
         # Check value is not categorical
         if not pd.api.types.is_numeric_dtype(adata.obs[anno_col]):
             raise ValueError(
-                "adata.obs[anno_col] is not of continuous type - please use tdiffpy.utils.annotate_nhoods for categorical variables"
+                "adata.obs[anno_col] is not of continuous type - please use tdiff.utils.annotate_nhoods for categorical variables"
             )
 
         anno_val = adata.obsm["nhoods"].T.dot(csr_matrix(adata.obs[anno_col]).T)
@@ -534,7 +564,7 @@ class Tdiff:
             sample_adata = mdata["tdiff"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiffpy.count_nhoods(adata) first"
+                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         adata = mdata[feature_key]
@@ -602,7 +632,7 @@ class Tdiff:
         except KeyError:
             print(
                 "tdiff_mdata should be a MuData object with two slots:"
-                " feature_key and 'tdiff' - please run tdiffpy.count_nhoods(adata) first"
+                " feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         adata = mdata[feature_key]
@@ -619,64 +649,6 @@ class Tdiff:
         nhoods_X = X.T.dot(adata.obsm["nhoods"])
         nhoods_X = csr_matrix(nhoods_X / adata.obsm["nhoods"].toarray().sum(0))
         sample_adata.varm[expr_id] = nhoods_X.T
-
-    def _setup_rpy2(
-        self,
-    ):
-        """Set up rpy2 to run edgeR"""
-        numpy2ri.activate()
-        pandas2ri.activate()
-        edgeR = self._try_import_bioc_library("edgeR")
-        limma = self._try_import_bioc_library("limma")
-        stats = importr("stats")
-        base = importr("base")
-
-        return edgeR, limma, stats, base
-
-    def _try_import_bioc_library(
-        self,
-        name: str,
-    ):
-        """Import R packages.
-
-        Args:
-            name (str): R packages name
-        """
-        try:
-            _r_lib = importr(name)
-            return _r_lib
-        except PackageNotInstalledError:
-            print(f"Install Bioconductor library `{name!r}` first as `BiocManager::install({name!r}).`")
-            raise
-
-    def _graph_spatial_fdr(
-        self,
-        sample_adata: AnnData,
-        neighbors_key: str | None = None,
-    ):
-        """FDR correction weighted on inverse of connectivity of neighbourhoods. The distance to the k-th nearest neighbor is used as a measure of connectivity.
-
-        Args:
-            sample_adata: Sample-level AnnData.
-            neighbors_key: The key in `adata.obsp` to use as KNN graph. Defaults to None.
-        """
-        # use 1/connectivity as the weighting for the weighted BH adjustment from Cydar
-        w = 1 / sample_adata.var["kth_distance"]
-        w[np.isinf(w)] = 0
-
-        # Computing a density-weighted q-value.
-        pvalues = sample_adata.var["PValue"]
-        keep_nhoods = ~pvalues.isna()  # Filtering in case of test on subset of nhoods
-        o = pvalues[keep_nhoods].argsort()
-        pvalues = pvalues[keep_nhoods][o]
-        w = w[keep_nhoods][o]
-
-        adjp = np.zeros(shape=len(o))
-        adjp[o] = (sum(w) * pvalues / np.cumsum(w))[::-1].cummin()[::-1]
-        adjp = np.array([x if x < 1 else 1 for x in adjp])
-
-        sample_adata.var["SpatialFDR"] = np.nan
-        sample_adata.var.loc[keep_nhoods, "SpatialFDR"] = adjp
 
 
 
@@ -716,7 +688,6 @@ class Tdiff:
         return length_df
 
 
-
     def permute_test_point(self,
                            mdata: MuData,
                             n:int = 100,
@@ -727,7 +698,7 @@ class Tdiff:
             sample_adata = mdata["tdiff"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiffpy.count_nhoods(adata) first"
+                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
             )
             raise
 
@@ -772,7 +743,6 @@ class Tdiff:
                         false_list.append(j)
         
                     permute_point_list.append(logChange)
-
     
             permute_point_list=np.array(permute_point_list)
             
@@ -792,19 +762,19 @@ class Tdiff:
         length_df= _test_binom(length_df,times=times)
         return length_df
 
-    def make_range(self,
+    def _make_range(self,
         mdata: MuData,
         time_col: str|None=None,
         FDR:int=0.05,
         only_range:bool =False,
-        feature_key: str | None = "rna",
-    ):
+        feature_key: str | None = "rna"
+                ):
         try:
             sample_adata = mdata["tdiff"]
             pseudobulk=mdata["pseudobulk"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiffpy.count_nhoods(adata) first"
+                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         adata = mdata[feature_key]
@@ -812,7 +782,7 @@ class Tdiff:
             try:
                 nhoods = adata.obsm["nhoods"]
             except KeyError:
-                print('Cannot find "nhoods" slot in adata.obsm -- please run tdiffpy.make_nhoods(adata)')
+                print('Cannot find "nhoods" slot in adata.obsm -- please run tdiff.make_nhoods(adata)')
                 raise
         if time_col is None:
             time_col=pseudobulk.uns["time_col"]
@@ -835,7 +805,102 @@ class Tdiff:
             sample_adata.var["logChange"]=sample_adata.var["logCPM"]*sample_adata.var["logFC"]
 
 
-    def make_da_cpm(
+
+    def plotDAheatmap(self,
+                mdata:MuData,
+                vmax:int or None=3,
+                vmin:int or None=-3,
+                n_interval:int or None = 100,
+                col_cluster:bool or None=False,
+                cmap:str or None="RdBu_r",
+                **kwarg):
+
+        try:
+            tdiff = mdata["tdiff"]
+        except KeyError:
+            print(
+                "tdiff should be a MuData object with two slots: feature_key and 'tdiff' - please run tidff.count_nhoods(adata) first"
+            )
+            raise
+        varTable=tdiff.var
+        range_data=varTable[["range_down","range_up"]].values
+        groupCPM=mdata["tdiff"].var[['group1_cpm', 'group2_cpm']]
+        # permute value in every interval
+        permute_point_sample={}
+        permute_point_group={}
+        wholecpm=self._make_da_cpm(mdata)
+        for j in range(n_interval):
+            point=(j+1)/(n_interval+1)
+            mask = (point >= range_data[:, 0]) & (point <= range_data[:, 1])
+            sample1Array=wholecpm.loc[mask,:]
+            sample1Mean=np.mean(sample1Array,axis=0)
+            permute_point_sample[j]=sample1Mean
+            
+            group1Array=groupCPM.loc[mask,:]
+            group1Mean=np.mean(group1Array,axis=0)
+            permute_point_group[j]=group1Mean
+            
+        groupDf=pd.DataFrame(permute_point_sample)
+        groupDf.columns=groupDf.columns.astype("str")
+        
+        # Apply the row scaling function to each row
+        scaled_df = groupDf.apply(_row_scale, axis=1)
+        scaled_df=scaled_df.fillna(0)
+        
+        groupCpmDf=pd.DataFrame(permute_point_group)
+        groupCpmDf.columns=groupCpmDf.columns.astype("str")
+        groupCpmDf=groupCpmDf.T[np.array(groupCpmDf.sum(axis=0)>0)].T
+        
+        lenDf=self.permute_test_point(mdata,n=100,include_null=True,times=20)
+        scaled_df_group = groupCpmDf.apply(_row_scale, axis=1)
+        fdr=pd.DataFrame(lenDf['binom_p'])
+        fdr=-np.log10(fdr+0.00000000001)
+        diff=pd.DataFrame(lenDf['meanLogChange']).T
+        fdr=fdr.T
+        diff.index=diff.index.astype("str")
+        fdr.index=fdr.index.astype("str")
+        diff.columns=diff.columns.astype("str")
+        fdr.columns=fdr.columns.astype("str")
+        bottonCol=pd.concat([scaled_df_group,diff,fdr],axis=0).T.dropna()
+        
+        pseudotimeCol=scaled_df.columns.astype("int")
+        pseudotimeDf=pd.DataFrame(pseudotimeCol)
+        pseudotimeDf.index=scaled_df.columns
+        col_ha = pch.HeatmapAnnotation(Pseudotime=pch.anno_simple(pseudotimeDf[0],cmap='jet',
+                                                add_text=False,text_kws={'color':'black','rotation':-90,'fontweight':'bold','fontsize':10,},
+                                                legend=True),
+                                verbose=0,label_side='left',label_kws={'horizontalalignment':'right'})
+        
+        
+        fdr=pd.DataFrame(lenDf['binom_p'])
+        fdr=-np.log10(fdr+0.00000000001)
+        diff=pd.DataFrame(lenDf['meanLogChange']).T
+        fdr=fdr.T
+        diff.index=diff.index.astype("str")
+        fdr.index=fdr.index.astype("str")
+        diff.columns=diff.columns.astype("str")
+        fdr.columns=fdr.columns.astype("str")
+        bottonCol=pd.concat([scaled_df_group,diff,fdr],axis=0).T.dropna()
+        bottom_ha = pch.HeatmapAnnotation(group1=pch.anno_simple(bottonCol.group1_cpm,cmap='RdBu_r',
+                                            add_text=False,text_kws={'color':'black','rotation':-90,'fontweight':'bold','fontsize':10,},
+                                            legend=True),
+                                group2=pch.anno_simple(bottonCol.group2_cpm,cmap='RdBu_r',
+                                            add_text=False,text_kws={'color':'black','rotation':-90,'fontweight':'bold','fontsize':10,},
+                                            legend=True),
+                                Diff_expression=pch.anno_simple(bottonCol.meanLogChange,cmap='PiYG_r',
+                                            add_text=False,text_kws={'color':'black','rotation':-90,'fontweight':'bold','fontsize':10,},
+                                            legend=True),
+                                FDR=pch.anno_simple(bottonCol.binom_p,cmap='Spectral_r',
+                                            add_text=False,text_kws={'color':'black','rotation':-90,'fontweight':'bold','fontsize':10,},
+                                            legend=True),
+                            verbose=0,label_side='left')
+        pch.ClusterMapPlotter(scaled_df,col_cluster=False,cmap="RdBu_r",vmax=vmax,vmin=vmin,
+                        top_annotation=col_ha,bottom_annotation=bottom_ha,**kwarg
+                            )
+
+
+
+    def _make_da_cpm(
         self,
         mdata: MuData,
         fix_libsize=False,
@@ -864,10 +929,7 @@ class Tdiff:
         
 
         indexCell=tdiff.var["index_cell"]
-          
-
         count_mat = tdiff.X.T.toarray()
-
         lib_size_raw = count_mat.sum(0)
         keep_smp = lib_size_raw > 0
         keep_nhoods = count_mat[:, keep_smp].sum(1) > 0
@@ -876,7 +938,7 @@ class Tdiff:
         else:
             lib_size=lib_size_raw.copy()    
         
-        edgeR, limma, stats, base = self._setup_rpy2()
+        edgeR, limma, stats, base = _setup_rpy2()
 
             # Fit NB-GLM
         dge = edgeR.DGEList(counts=count_mat[keep_nhoods, :][:, keep_smp], lib_size=lib_size[keep_smp])
@@ -908,7 +970,7 @@ class Tdiff:
             sample_adata = mdata["tdiff"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiffpy.count_nhoods(adata) first"
+                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         varTable=sample_adata.var
@@ -937,7 +999,7 @@ class Tdiff:
             try:
                 nhoods = adata.obsm["nhoods"]
             except KeyError:
-                print('Cannot find "nhoods" slot in adata.obsm -- please run tdiffpy.make_nhoods(adata)')
+                print('Cannot find "nhoods" slot in adata.obsm -- please run tdiff.make_nhoods(adata)')
                 raise
         df_res_dict={}
         indexCell=adata.obs_names[adata.obs["nhood_ixs_refined"] == 1]
@@ -981,8 +1043,127 @@ class Tdiff:
         mdata.mod["pseudobulk"] = adata_res
         
         return(adata_res)
-        
-    def da_expression(
+
+
+    def de(
+        self,
+        mdata: MuData,
+        design: str,
+        model_contrasts: str | None = None,
+        subset_samples: list[str] | None = None,
+        add_intercept: bool = True,
+        feature_key: str | None = "rna",
+        shuffle: bool = False,
+        fix_libsize=False,
+        njob : int =-1,
+        shuffle_times : int=5,
+        FDR_threshold : int=0.05,
+        n_interval: int = 100
+        ):
+        try:
+            sample_adata = mdata["tdiff"]
+            pseudobulk=mdata["pseudobulk"]
+        except KeyError:
+            print(
+                "tdiff_mdata should be a MuData object with three slots: feature_key ,'tdiff', and 'pseudobulk' - please run tdiff.count_nhoods(adata) first"
+            )
+            raise
+        time_col=pseudobulk.uns["time_col"]
+        print("Detecting differential expression in neighborhoods......")
+        deg=self.diff_expression(mdata,design=design,model_contrasts=model_contrasts,subset_samples=subset_samples,njob=njob,fix_libsize=fix_libsize,add_intercept=add_intercept)
+        deg=self._makeSPFDR(mdata=mdata,njob=njob)
+        print("Permutation null hypothesis testing.....")
+        null_test=self.makeShuffleDE(mdata,design=design,model_contrasts=model_contrasts,subset_samples=subset_samples,
+                                    njob=njob,fix_libsize=fix_libsize,add_intercept=add_intercept,times=shuffle_times,
+                                    FDR_threshold=FDR_threshold)
+        print("Projecting neighborhoods to pseudotime axis.....")
+        self._make_range_gene(mdata=mdata,FDR_threshold=FDR_threshold,time_col=time_col,feature_key=feature_key)
+        self.permute_point_gene(mdata,n=n_interval)
+        _test_gene_binom(mdata)
+        _test_whole_gene(mdata)
+        num_deg=np.sum(pseudobulk.var["overall_gene_p"]<FDR_threshold)
+        print(f"{num_deg} differential genes were detected!")
+
+    def plotDE(self,
+        mdata: Mudata,genes:list | None=None,
+        row_cluster:bool = False,
+        show_rownames:bool = False,
+        show_colnames:bool = False,
+        row_split_gap:int | None=1,
+        pseudotime_cmap:str | None = "jet",
+        row_split=None,**kwarg
+        ):
+        try:
+            pseudobulk=mdata["pseudobulk"]
+        except KeyError:
+            print(
+                "tdiff_mdata should be a MuData object with three slots: feature_key ,'tdiff', and 'pseudobulk' - please run tdiff.count_nhoods(adata) first"
+            )
+            raise
+        if genes==None:
+            genes=pseudobulk.var_names[pseudobulk.var["overall_gene_p"]<0.05]
+        exprMatrix=pseudobulk.varm["exprPoint"].loc[genes]
+        fdr_matrix=pseudobulk.varm["gene_p_adj"].loc[genes]
+        fdr_matrix=-np.log(fdr_matrix+0.000000001)
+        cpm1 =  np.log(pseudobulk.varm["group1_cpm"]+1).loc[genes,:]
+        cpm2 =  np.log(pseudobulk.varm["group2_cpm"]+1).loc[genes,:]
+        cpm_bind=pd.concat([cpm1, cpm2], axis=1)
+        cpm_bind=cpm_bind.fillna(0)
+        scale_cpm_bind = scale(cpm_bind, axis=1)
+        scale_cpm_bind=pd.DataFrame(scale_cpm_bind)
+        scale_cpm_bind.index=cpm_bind.index
+        scale_cpm_bind.columns=cpm_bind.columns
+
+        plt.figure(figsize=(6, 4))
+        pseudotimeCol=fdr_matrix.columns.astype("int")
+        pseudotimeDf=pd.DataFrame(pseudotimeCol)
+        pseudotimeDf.index=fdr_matrix.columns
+        col_ha = pch.HeatmapAnnotation(Pseudotime=pch.anno_simple(pseudotimeDf[0],cmap=pseudotime_cmap,
+                                                add_text=False,text_kws={'color':'black','rotation':-90,'fontweight':'bold','fontsize':10,},
+                                                legend=True),
+                                verbose=0,label_side='left',legend=False,label_kws={'horizontalalignment':'right'})
+        col_ha2 = pch.HeatmapAnnotation(Pseudotime=pch.anno_simple(pseudotimeDf[0],cmap=pseudotime_cmap,
+                                                add_text=False,text_kws={'color':'black','rotation':-90,'fontweight':'bold','fontsize':10,},
+                                                legend=True),
+                                verbose=0,label_side='left',legend=False,label_kws={'horizontalalignment':'right',"visible":False})
+        ## heatmap
+        plt.figure(figsize=(6, 4))
+        cm1=pch.ClusterMapPlotter(scale_cpm_bind.iloc[:,0:cpm1.shape[1]],row_cluster=row_cluster,col_cluster=False,
+                                        show_rownames=show_rownames,show_colnames=show_colnames,linewidths=0,top_annotation=col_ha,
+                                            cmap="RdBu_r",vmax=3.5,vmin=-3.5,row_split=row_split,
+                                        row_split_gap=row_split_gap,plot=False,**kwarg
+                                            )
+        plt.figure(figsize=(6, 4))
+        cm2=pch.ClusterMapPlotter(scale_cpm_bind.iloc[:,cpm1.shape[1]+1:cpm1.shape[1]+cpm2.shape[1]],row_cluster=row_cluster,
+                                col_cluster=False,show_rownames=show_rownames,show_colnames=False,
+                                linewidths=0,top_annotation=col_ha2,
+                                cmap="RdBu_r",vmax=3.5,vmin=-3.5,row_split=row_split,
+                                row_split_gap=row_split_gap,plot=False,**kwarg
+                                            )
+        plt.figure(figsize=(6, 4))
+        cm4=pch.ClusterMapPlotter(fdr_matrix,
+                                        col_cluster=False,row_cluster=row_cluster,
+                                        label='values',top_annotation=col_ha2,
+                                        show_rownames=show_rownames,show_colnames=show_colnames,
+                                        verbose=0,cmap="Spectral_r",plot=False,
+                                            row_split=row_split,row_split_gap=row_split_gap,**kwarg)
+        plt.figure(figsize=(6, 4))
+        cm3=pch.ClusterMapPlotter(exprMatrix,
+                                        col_cluster=False,row_cluster=row_cluster,
+                                        label='values',top_annotation=col_ha2,
+                                        show_rownames=show_rownames,show_colnames=show_colnames,
+                                        verbose=0,cmap="PiYG",plot=False,
+                                            row_split=row_split,row_split_gap=row_split_gap,vmax=15,vmin=-15,**kwarg)
+        cmlist=[cm1,cm2,cm3,cm4]
+        plt.figure(figsize=(12,6))
+        ax=pch.clustermap.composite(cmlist=cmlist, main=1,legend_hpad=4,col_gap=0.1)
+        cm1.ax.set_title("Group1")
+        cm2.ax.set_title("Group2")
+        cm3.ax.set_title("Diff")
+        cm4.ax.set_title("FDR")
+
+
+    def diff_expression(
         self,
         mdata: MuData,
         design: str,
@@ -1030,7 +1211,7 @@ class Tdiff:
             try:
                 nhoods = adata.obsm["nhoods"]
             except KeyError:
-                print('Cannot find "nhoods" slot in adata.obsm -- please run tdiffpy.make_nhoods(adata)')
+                print('Cannot find "nhoods" slot in adata.obsm -- please run tdiff.make_nhoods(adata)')
                 raise
         
         indexCell=adata.obs_names[adata.obs["nhood_ixs_refined"] == 1]
@@ -1084,7 +1265,7 @@ class Tdiff:
             #keep_nhoods = count_mat[:, keep_smp].sum(1) > 0
 
                     # Set up rpy2 to run edgeR
-            edgeR, limma, stats, base = self._setup_rpy2()
+            edgeR, limma, stats, base = _setup_rpy2()
     
                 # Define model matrix
             if not add_intercept or model_contrasts is not None:
@@ -1226,11 +1407,11 @@ class Tdiff:
             sample_adata.uns["var1"]=var1
             sample_adata.uns["var2"]=var2
             varDf=pd.DataFrame(index=tdiff.var_names)
-            tdiff.varm[var1]=self.mergeVar(varDf,group1.T)
-            tdiff.varm[var2]=self.mergeVar(varDf,group2.T)
+            tdiff.varm[var1]=_mergeVar(varDf,group1.T)
+            tdiff.varm[var2]=_mergeVar(varDf,group2.T)
             
             
-    def makeSPFDR(self,
+    def _makeSPFDR(self,
                   mdata: MuData,
                  p_df= None,
                   njob: int = -1,
@@ -1289,7 +1470,7 @@ class Tdiff:
         return(spFDRDf)
 
     
-    def makeShuffleDA(self,
+    def makeShuffleDE(self,
                      mdata:Mudata,
                      design: str,
                      times: int = 3,
@@ -1306,12 +1487,12 @@ class Tdiff:
             pseudobulk = mdata["pseudobulk"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with three slots: feature_key and 'pseudobulk' - please run tdiffpy.count_nhoods(adata) first"
+                "tdiff_mdata should be a MuData object with three slots: feature_key and 'pseudobulk' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         for i in range(times):
             print(f"working on {i} times")
-            res_null=self.da_expression(mdata,design=design,
+            res_null=self.diff_expression(mdata,design=design,
                                         model_contrasts=model_contrasts,
                                         add_intercept=add_intercept,
                                        feature_key=feature_key,
@@ -1319,7 +1500,7 @@ class Tdiff:
                                        fix_libsize= fix_libsize,
                                        njob=njob)
             print(f"Making FDR")
-            res_null_Dict[i]= self.makeSPFDR(mdata=mdata,
+            res_null_Dict[i]= self._makeSPFDR(mdata=mdata,
                  p_df= res_null,
                  njob= njob,
                  shuffle= True) 
@@ -1327,16 +1508,12 @@ class Tdiff:
         df_mean = pd.concat(filtered_dfs).groupby(level=0).mean()
         varDf=pd.DataFrame(index=pseudobulk.var_names)
         #df_mean = pd.concat(res_null_Dict.values()).groupby(level=0).mean()
-        pseudobulk.varm["null_mean"]=self.mergeVar(varDf,df_mean)
+        pseudobulk.varm["null_mean"]=_mergeVar(varDf,df_mean)
         pseudobulk.uns["shuffle_times"]=times
         #pseudobulk.var=pd.merge(pseudobulk.var,df_mean,left_index=True,right_index=True,how="left")
         return(df_mean)
-    def mergeVar(self,
-                 varTable,
-                table):
-        return(pd.merge(varTable,table,left_index=True,right_index=True,how="left"))
 
-    def make_range_gene(self,
+    def _make_range_gene(self,
         mdata: MuData,
         time_col: str,
         FDR_threshold:int=0.05,
@@ -1346,7 +1523,7 @@ class Tdiff:
             sample_adata = mdata["tdiff"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiffpy.count_nhoods(adata) first"
+                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         pseudobulk=mdata["pseudobulk"]
@@ -1355,7 +1532,7 @@ class Tdiff:
             try:
                 nhoods = adata.obsm["nhoods"]
             except KeyError:
-                print('Cannot find "nhoods" slot in adata.obsm -- please run tdiffpy.make_nhoods(adata)')
+                print('Cannot find "nhoods" slot in adata.obsm -- please run tdiff.make_nhoods(adata)')
                 raise
         timeVal=adata.obs[time_col]
         range_df_1_list=list()
@@ -1373,39 +1550,11 @@ class Tdiff:
         sample_adata.var["range_down"]=range_df_1_list
         sample_adata.var["range_up"]=range_df_2_list
         varDf=pd.DataFrame(index=sample_adata.var_names)
-        spFDR=self.mergeVar(varDf,pseudobulk.varm["SPFDR"].T)
+        spFDR=_mergeVar(varDf,pseudobulk.varm["SPFDR"].T)
         sample_adata.varm["Accept"]=spFDR<FDR_threshold
         logExp=(pseudobulk.varm["logCPM"]*pseudobulk.varm["logFC"]).T
-        sample_adata.varm["logChange"]=self.mergeVar(varDf,logExp)
-        sample_adata.varm["null_mean"]=self.mergeVar(varDf,pseudobulk.varm["null_mean"].T)
-    def test_whole_gene(self,
-                   mdata: MuData):
-        try:
-            tdiff = mdata["tdiff"]
-        except KeyError:
-            print(
-                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiffpy.count_nhoods(adata) first"
-            )
-            raise
-        pseudobulk=mdata["pseudobulk"]
-        times=pseudobulk.uns["shuffle_times"]
-        varTable=tdiff.varm
-        trueVal=np.sum(varTable["Accept"],axis=0)
-        sumVal=varTable["Accept"].shape[0]
-        nullVal=np.sum(varTable["null_mean"],axis=0)
-      
-        pval_list=[]
-        for i in range(len(nullVal)):
-            if(trueVal[i]==0):
-                pval_list.append(1)
-            else:
-                if (nullVal[i]==0):
-                    nullVal[i]=1/(sumVal*times)
-                else:
-                     nullVal[i]=nullVal[i]/(sumVal*times)
-                pval_list.append(1- binom.cdf(trueVal[i], sumVal, nullVal[i]))
-        rejected, adjusted_p_values, _, _ = sm.stats.multipletests(pval_list, method='fdr_bh')
-        pseudobulk.var["overall_gene_p"]=np.array(adjusted_p_values)
+        sample_adata.varm["logChange"]=_mergeVar(varDf,logExp)
+        sample_adata.varm["null_mean"]=_mergeVar(varDf,pseudobulk.varm["null_mean"].T)
 
 
     def permute_point_gene(self,
@@ -1417,7 +1566,7 @@ class Tdiff:
             pseudobulk = mdata["pseudobulk"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with three slots: feature_key and 'tdiff' and 'pseudobulk' - please run tdiffpy.count_nhoods(adata) first"
+                "tdiff_mdata should be a MuData object with three slots: feature_key and 'tdiff' and 'pseudobulk' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         varTable=sample_adata.var
@@ -1481,50 +1630,9 @@ class Tdiff:
         group2Df.columns=group2Df.columns.astype("str")
         pseudobulk.varm["group1_cpm"]=group1Df[pseudobulk.uns["sum"].index]
         pseudobulk.varm["group2_cpm"]=group2Df[pseudobulk.uns["sum"].index]
-    
-    def test_gene_binom(self,
-                     mdata: Mudata):
-        try:
-            sample_adata = mdata["tdiff"]
-            pseudobulk=mdata["pseudobulk"]
-        except KeyError:
-            print(
-                "tdiff_mdata should be a MuData object with three slots: feature_key and 'tdiff' - please run tdiffpy.count_nhoods(adata) first"
-            )
-            raise
-        times=pseudobulk.uns["shuffle_times"]
-        varTable=pseudobulk.varm
-        nullTable=varTable["nullPoint"]
 
-        #rateVal=
-        sumTable=pseudobulk.uns["sum"]
-        trueTable=varTable["truePoint"]
-        trueTable = trueTable.fillna(0)
-        nullTable = nullTable.fillna(0)
-        nullVal = np.where(nullTable == 0, 1 / (sumTable.T * times), nullTable/np.array(sumTable.T * times))
-        p_val_array = 1 - binom.cdf(trueTable, sumTable.T, nullVal)
-        p_val_array[trueTable == 0] = 1
-        p_val_df = pd.DataFrame(p_val_array, index=trueTable.index, columns=trueTable.columns)
-        result_df = p_val_df.apply(lambda column: sm.stats.multipletests(column, method='fdr_bh'))
-        p_adj_df=result_df.apply(lambda x: x[1])
-        p_adj_df.index=p_val_df.index
-        p_adj_df.columns=p_val_df.columns.astype("str")
-        pseudobulk.varm["gene_p_adj"]=p_adj_df
-        '''
-        p_val_df=pd.DataFrame(index=trueTable.index,columns=trueTable.columns)
-        for i in range(trueTable.shape[0]):
-            for j in range(trueTable.shape[1]):
-                trueVal=trueTable.iloc[i,j]
-                nullVal=nullTable.iloc[i,j]
-                sumVal=sumTable.iloc[j]
-                if nullVal==0:
-                    nullVal=1/(sumVal*times) # minimal
-                p_val= 1- binom.cdf(trueVal, sumVal, nullVal)
-                if trueVal == 0:
-                    p_val=1
-                p_val_df.iloc[i,j]=p_val
-                '''
-    def da_expression_overall(
+
+    def diff_expression_overall(
         self,
         mdata: MuData,
         design: str,
@@ -1558,7 +1666,7 @@ class Tdiff:
         except KeyError:
             print(
                 "[bold red]tdiff_mdata should be a MuData object with two slots:"
-                " feature_key and 'tdiff' - please run tdiffpy.count_nhoods() first"
+                " feature_key and 'tdiff' - please run tdiff.count_nhoods() first"
             )
             raise
         adata = mdata[feature_key]
@@ -1608,7 +1716,7 @@ class Tdiff:
         keep_nhoods = count_mat[:, keep_smp].sum(1) > 0
 
         # Set up rpy2 to run edgeR
-        edgeR, limma, stats, base = self._setup_rpy2()
+        edgeR, limma, stats, base = _setup_rpy2()
 
         # Define model matrix
         if not add_intercept or model_contrasts is not None:
@@ -1656,7 +1764,7 @@ class Tdiff:
         res.index = pseudobulk.var_names[keep_nhoods]  # type: ignore
         varDf=pd.DataFrame(index=pseudobulk.var_names)
         #df_mean = pd.concat(res_null_Dict.values()).groupby(level=0).mean()
-        pseudobulk.varm["edgeR_overall"]=self.mergeVar(varDf,res)
+        pseudobulk.varm["edgeR_overall"]=_mergeVar(varDf,res)
 
 
     def make_single_cpm(
@@ -1700,7 +1808,7 @@ class Tdiff:
             try:
                 nhoods = adata.obsm["nhoods"]
             except KeyError:
-                print('Cannot find "nhoods" slot in adata.obsm -- please run tdiffpy.make_nhoods(adata)')
+                print('Cannot find "nhoods" slot in adata.obsm -- please run tdiff.make_nhoods(adata)')
                 raise
         
         indexCell=adata.obs_names[adata.obs["nhood_ixs_refined"] == 1]
@@ -1718,7 +1826,7 @@ class Tdiff:
             else:
                 lib_size=lib_size_raw.copy()    
             
-            edgeR, limma, stats, base = self._setup_rpy2()
+            edgeR, limma, stats, base = _setup_rpy2()
     
                 # Fit NB-GLM
             dge = edgeR.DGEList(counts=count_mat[keep_nhoods, :][:, keep_smp], lib_size=lib_size[keep_smp])
@@ -1760,7 +1868,7 @@ class Tdiff:
             pseudobulk = mdata["pseudobulk"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with three slots: feature_key and 'pseudobulk' - please run tdiffpy.count_nhoods(adata) first"
+                "tdiff_mdata should be a MuData object with three slots: feature_key and 'pseudobulk' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         
@@ -1776,7 +1884,7 @@ class Tdiff:
             cpm_i=whole_cpm.iloc[:,logic]
             cpm_i.columns=list(compress(attr1, logic))
             varDf=pd.DataFrame(index=tdiff.var_names)
-            cpm_update=self.mergeVar(varDf,cpm_i.T)
+            cpm_update=_mergeVar(varDf,cpm_i.T)
             permute_point_group = {}
             for j in range(n):
                 point=(j+1)/(n+1)
@@ -1795,7 +1903,7 @@ class Tdiff:
         cpm_i = whole_cpm.iloc[:, logic]
         cpm_i.columns = list(compress(attr1, logic))
         varDf = pd.DataFrame(index=var_names)
-        cpm_update = self.mergeVar(varDf, cpm_i.T)
+        cpm_update = _mergeVar(varDf, cpm_i.T)
     
         permute_point_group = {}
         for j in range(n):
@@ -1809,21 +1917,22 @@ class Tdiff:
         groupDf.columns = groupDf.columns.astype("str")
         
         return attr2_value, groupDf
-    
+
+
     def permute_point_cpm_parallel(self,mdata, mode:str="DE",
                                    n: int = 100, n_jobs: int = -1):
         if mode == "DA":
             try:
                 tdiff = mdata["tdiff"]
             except KeyError:
-                print("tdiff_mdata should be a MuData object with three slots: feature_key and 'pseudobulk' - please run tdiffpy.count_nhoods(adata) first")
+                print("tdiff_mdata should be a MuData object with three slots: feature_key and 'pseudobulk' - please run tdiff.count_nhoods(adata) first")
                 raise
         else: 
             try:
                 tdiff = mdata["tdiff"]
                 pseudobulk = mdata["pseudobulk"]
             except KeyError:
-                print("tdiff_mdata should be a MuData object with three slots: feature_key and 'pseudobulk' - please run tdiffpy.count_nhoods(adata) first")
+                print("tdiff_mdata should be a MuData object with three slots: feature_key and 'pseudobulk' - please run tdiff.count_nhoods(adata) first")
                 raise
     
         varTable = tdiff.var
@@ -1832,11 +1941,7 @@ class Tdiff:
             whole_cpm=tdiff.varm["whole_cpm"]
             colName = whole_cpm.columns
             var_names = tdiff.var_names
-            
-
-
-
-            
+                   
         whole_cpm = pseudobulk.varm["whole_cpm"]
         colName = whole_cpm.columns
         attr1 = [s.split("_sep_")[0] for s in colName]
@@ -1905,7 +2010,7 @@ class Tdiff:
             else:
                 lib_size=lib_size_raw.copy()    
             
-            edgeR, limma, stats, base = self._setup_rpy2()
+            edgeR, limma, stats, base = _setup_rpy2()
     
                 # Fit NB-GLM
             dge = edgeR.DGEList(counts=count_mat[keep_nhoods, :][:, keep_smp], lib_size=lib_size[keep_smp])

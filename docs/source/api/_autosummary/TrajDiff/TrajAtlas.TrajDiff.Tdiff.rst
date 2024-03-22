@@ -52,17 +52,17 @@ Methods table
 
 
     
+    ~TrajAtlas.TrajDiff.Tdiff.da
+    
+
+
+    
     ~TrajAtlas.TrajDiff.Tdiff.da_expression
     
 
 
     
     ~TrajAtlas.TrajDiff.Tdiff.da_expression_overall
-    
-
-
-    
-    ~TrajAtlas.TrajDiff.Tdiff.da_nhoods
     
 
 
@@ -82,32 +82,12 @@ Methods table
 
 
     
-    ~TrajAtlas.TrajDiff.Tdiff.make_da_cpm
-    
-
-
-    
     ~TrajAtlas.TrajDiff.Tdiff.make_nhoods
     
 
 
     
-    ~TrajAtlas.TrajDiff.Tdiff.make_null
-    
-
-
-    
     ~TrajAtlas.TrajDiff.Tdiff.make_pseudobulk_parallel
-    
-
-
-    
-    ~TrajAtlas.TrajDiff.Tdiff.make_range
-    
-
-
-    
-    ~TrajAtlas.TrajDiff.Tdiff.make_range_gene
     
 
 
@@ -148,6 +128,11 @@ Methods table
 
     
     ~TrajAtlas.TrajDiff.Tdiff.permute_test_window
+    
+
+
+    
+    ~TrajAtlas.TrajDiff.Tdiff.plotDAheatmap
     
 
 
@@ -223,6 +208,12 @@ count\_nhoods
 
 
 
+da
+^^
+.. automethod:: Tdiff.da
+
+
+
 da\_expression
 ^^^^^^^^^^^^^^
 .. automethod:: Tdiff.da_expression
@@ -232,12 +223,6 @@ da\_expression
 da\_expression\_overall
 ^^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: Tdiff.da_expression_overall
-
-
-
-da\_nhoods
-^^^^^^^^^^
-.. automethod:: Tdiff.da_nhoods
 
 
 
@@ -259,39 +244,15 @@ makeShuffleDA
 
 
 
-make\_da\_cpm
-^^^^^^^^^^^^^
-.. automethod:: Tdiff.make_da_cpm
-
-
-
 make\_nhoods
 ^^^^^^^^^^^^
 .. automethod:: Tdiff.make_nhoods
 
 
 
-make\_null
-^^^^^^^^^^
-.. automethod:: Tdiff.make_null
-
-
-
 make\_pseudobulk\_parallel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: Tdiff.make_pseudobulk_parallel
-
-
-
-make\_range
-^^^^^^^^^^^
-.. automethod:: Tdiff.make_range
-
-
-
-make\_range\_gene
-^^^^^^^^^^^^^^^^^
-.. automethod:: Tdiff.make_range_gene
 
 
 
@@ -340,6 +301,12 @@ permute\_test\_point
 permute\_test\_window
 ^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: Tdiff.permute_test_window
+
+
+
+plotDAheatmap
+^^^^^^^^^^^^^
+.. automethod:: Tdiff.plotDAheatmap
 
 
 

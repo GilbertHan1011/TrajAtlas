@@ -9,7 +9,6 @@ import scanpy as sc
 import PyComplexHeatmap as pch
 
 
-
 def process_subset(i, j, sampleDict, lineageDict, adata, timeDict, timeBin, cell_threshold):
     agg_dict = {gene: "mean" for gene in adata.var_names}
     subsetCell = list(set(sampleDict[i]) & set(lineageDict[j]))

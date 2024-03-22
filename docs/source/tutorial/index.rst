@@ -7,3 +7,4 @@ Tutorials
     :glob:
 
     1_OPCST_projecting
+    Step2_differential_abundance
