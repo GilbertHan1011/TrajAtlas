@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.decomposition import NMF
 from mudata import MuData
 from TrajAtlas.TrajDiff.trajdiff_utils import _row_scale
+from rich import print
 
 try:
     from rpy2.robjects import conversion, numpy2ri, pandas2ri

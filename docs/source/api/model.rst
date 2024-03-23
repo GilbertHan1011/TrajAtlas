@@ -2,14 +2,16 @@
 
 Model
 =======
-Kernels compute cell-cell transition probabilities based on various input data modalities, including molecular
-similarity, RNA velocity :cite:`manno:18`, experimental time points, and many more. They come with methods
-for high-level, qualitative visualization, including vector field or random walk plots. For quantitative analysis of
-kernel-computed transition matrices, we recommend taking look at the :doc:`estimators <estimators>`.
+**Model** enable user to easily projecting their own datasets to our **Differentiation Atlas** and **OsteoProgenitor Cells-Specific Trajectory (OPCST) model**.
 
-We don't use the term "kernel" in the way it is used in
-`mathematics <https://en.wikipedia.org/wiki/Kernel_(algebra)>`_, but rather colloquially, to refer to a class that
-takes in multi-view single-cell data and outputs a cell-cell transition matrix.
+
+With this module, users are able to:
+
+1. Obtain the latent space of their own datasets.
+2. Annotate their datasets with seven-level annotations.
+3. Predict differentiation paths from different osteoprogenitor cells (OPCs).
+4. Obtain common pseudotime to indicate osteoblast differentiation progression.
+
 
 .. currentmodule:: TrajAtlas
 
@@ -17,4 +19,7 @@ takes in multi-view single-cell data and outputs a cell-cell transition matrix.
     :toctree: _autosummary/model
 
     model.ProjectData
+    model.label_transfer
+    model.gene_trends
+    model.pseduo_predict
 

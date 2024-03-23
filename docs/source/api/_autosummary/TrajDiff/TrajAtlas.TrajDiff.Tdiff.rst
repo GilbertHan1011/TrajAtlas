@@ -67,6 +67,11 @@ Methods table
 
 
     
+    ~TrajAtlas.TrajDiff.Tdiff.de
+    
+
+
+    
     ~TrajAtlas.TrajDiff.Tdiff.load
     
 
@@ -102,11 +107,6 @@ Methods table
 
 
     
-    ~TrajAtlas.TrajDiff.Tdiff.mergeVar
-    
-
-
-    
     ~TrajAtlas.TrajDiff.Tdiff.permute_point_cpm
     
 
@@ -137,22 +137,17 @@ Methods table
 
 
     
+    ~TrajAtlas.TrajDiff.Tdiff.plotDE
+    
+
+
+    
     ~TrajAtlas.TrajDiff.Tdiff.process_attr2_value
     
 
 
     
-    ~TrajAtlas.TrajDiff.Tdiff.test_gene_binom
-    
-
-
-    
     ~TrajAtlas.TrajDiff.Tdiff.test_whole
-    
-
-
-    
-    ~TrajAtlas.TrajDiff.Tdiff.test_whole_gene
     
 
 
@@ -226,6 +221,12 @@ da\_expression\_overall
 
 
 
+de
+^^
+.. automethod:: Tdiff.de
+
+
+
 load
 ^^^^
 .. automethod:: Tdiff.load
@@ -268,12 +269,6 @@ make\_whole\_cpm
 
 
 
-mergeVar
-^^^^^^^^
-.. automethod:: Tdiff.mergeVar
-
-
-
 permute\_point\_cpm
 ^^^^^^^^^^^^^^^^^^^
 .. automethod:: Tdiff.permute_point_cpm
@@ -310,27 +305,21 @@ plotDAheatmap
 
 
 
+plotDE
+^^^^^^
+.. automethod:: Tdiff.plotDE
+
+
+
 process\_attr2\_value
 ^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: Tdiff.process_attr2_value
 
 
 
-test\_gene\_binom
-^^^^^^^^^^^^^^^^^
-.. automethod:: Tdiff.test_gene_binom
-
-
-
 test\_whole
 ^^^^^^^^^^^
 .. automethod:: Tdiff.test_whole
-
-
-
-test\_whole\_gene
-^^^^^^^^^^^^^^^^^
-.. automethod:: Tdiff.test_whole_gene
 
 
 

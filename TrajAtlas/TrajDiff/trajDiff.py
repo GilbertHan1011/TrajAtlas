@@ -327,7 +327,7 @@ class Tdiff:
             design: Formula for the test, following glm syntax from R (e.g. '~ condition').
                     Terms should be columns in `tdiff_mdata[feature_key].obs`.
             model_contrasts: A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
-                             If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
+                            If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
             subset_samples: subset of samples (obs in `tdiff_mdata['tdiff']`) to use for the test. Defaults to None.
             add_intercept: whether to include an intercept in the model. If False, this is equivalent to adding + 0 in the design formula. When model_contrasts is specified, this is set to False by default. Defaults to True.
             feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
@@ -894,7 +894,7 @@ class Tdiff:
                                             add_text=False,text_kws={'color':'black','rotation':-90,'fontweight':'bold','fontsize':10,},
                                             legend=True),
                             verbose=0,label_side='left')
-        pch.ClusterMapPlotter(scaled_df,col_cluster=False,cmap="RdBu_r",vmax=vmax,vmin=vmin,
+        pch.ClusterMapPlotter(scaled_df,col_cluster=col_cluster,cmap=cmap,vmax=vmax,vmin=vmin,
                         top_annotation=col_ha,bottom_annotation=bottom_ha,**kwarg
                             )
 
@@ -1184,7 +1184,7 @@ class Tdiff:
             design: Formula for the test, following glm syntax from R (e.g. '~ condition').
                     Terms should be columns in `tdiff_mdata[feature_key].obs`.
             model_contrasts: A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
-                             If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
+                            If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
             subset_samples: subset of samples (obs in `tdiff_mdata['tdiff']`) to use for the test. Defaults to None.
             add_intercept: whether to include an intercept in the model. If False, this is equivalent to adding + 0 in the design formula. When model_contrasts is specified, this is set to False by default. Defaults to True.
             feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
@@ -1651,7 +1651,7 @@ class Tdiff:
             design: Formula for the test, following glm syntax from R (e.g. '~ condition').
                     Terms should be columns in `tdiff_mdata[feature_key].obs`.
             model_contrasts: A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
-                             If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
+                            If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
             subset_samples: subset of samples (obs in `tdiff_mdata['tdiff']`) to use for the test. Defaults to None.
             add_intercept: whether to include an intercept in the model. If False, this is equivalent to adding + 0 in the design formula. When model_contrasts is specified, this is set to False by default. Defaults to True.
             feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
@@ -1783,7 +1783,7 @@ class Tdiff:
             design: Formula for the test, following glm syntax from R (e.g. '~ condition').
                     Terms should be columns in `tdiff_mdata[feature_key].obs`.
             model_contrasts: A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
-                             If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
+                            If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
             subset_samples: subset of samples (obs in `tdiff_mdata['tdiff']`) to use for the test. Defaults to None.
             add_intercept: whether to include an intercept in the model. If False, this is equivalent to adding + 0 in the design formula. When model_contrasts is specified, this is set to False by default. Defaults to True.
             feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
@@ -1798,7 +1798,6 @@ class Tdiff:
         try:
             sample_adata = mdata["pseudobulk"]
             adata = mdata[feature_key]
-            tdiff=mdata["tdiff"]
         except KeyError:
             print(
                 "[bold red]tdiff_mdata should be a MuData object with three slots:"
@@ -1965,7 +1964,6 @@ class Tdiff:
     def make_whole_cpm(
         self,
         mdata: MuData,
-        feature_key: str | None = "rna",
         fix_libsize=False,
         sample_column:str|None=None,
         n_jobs : int =-1
@@ -1977,7 +1975,7 @@ class Tdiff:
             design: Formula for the test, following glm syntax from R (e.g. '~ condition').
                     Terms should be columns in `tdiff_mdata[feature_key].obs`.
             model_contrasts: A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
-                             If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
+                            If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
             feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
     
         Returns:
@@ -1996,8 +1994,6 @@ class Tdiff:
                 " feature_key and 'tdiff' - please make_pseudobulk_parallel() first"
             )
             raise
-        
-
         indexCell=tdiff.var["index_cell"]
       
         def da(i):
