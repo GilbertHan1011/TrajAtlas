@@ -18,7 +18,7 @@ from sklearn.preprocessing import scale
 import matplotlib.pyplot as plt
 
 from TrajAtlas.TrajDiff.trajdiff_utils_9 import _test_binom, _test_gene_binom, _test_whole_gene, _row_scale,_graph_spatial_fdr,_mergeVar
-from TrajAtlas.TrajDiff._env import _setup_rpy2
+from TrajAtlas.utils._env import _setup_rpy2
 
 pd.DataFrame.iteritems = pd.DataFrame.items
 
@@ -1087,7 +1087,7 @@ class Tdiff:
         print(f"{num_deg} differential genes were detected!")
 
     def plotDE(self,
-        mdata: Mudata,genes:list | None=None,
+        mdata: MuData,genes:list | None=None,
         row_cluster:bool = False,
         show_rownames:bool = False,
         show_colnames:bool = False,
@@ -1473,7 +1473,7 @@ class Tdiff:
 
     
     def makeShuffleDA(self,
-                     mdata:Mudata,
+                     mdata:MuData,
                      design: str,
                      times: int = 3,
                      model_contrasts: str | None = None,

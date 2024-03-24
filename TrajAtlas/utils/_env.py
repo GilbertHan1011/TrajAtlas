@@ -32,3 +32,27 @@ def _try_import_bioc_library(
     except PackageNotInstalledError:
         print(f"Install Bioconductor library `{name!r}` first as `BiocManager::install({name!r}).`")
         raise
+
+
+
+def _setup_RcppML(
+):
+    """Set up rpy2 to run edgeR"""
+    numpy2ri.activate()
+    pandas2ri.activate()
+    RcppML = _try_import_bioc_library("RcppML")
+
+    return RcppML
+
+        
+def _detect_RcppML():
+    """Import R packages.
+
+    Args:
+        name (str): R packages name
+    """
+    try:
+        _r_lib = importr("RcppML")
+        return True
+    except PackageNotInstalledError:
+        return False

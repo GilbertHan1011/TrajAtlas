@@ -5,7 +5,9 @@ import numpy as np
 from sklearn.decomposition import NMF
 from mudata import MuData
 from TrajAtlas.TrajDiff.trajdiff_utils import _row_scale
-from rich import print
+from TrajAtlas.utils._env import _setup_RcppML, _try_import_bioc_library, _detect_RcppML
+from anndata import AnnData
+import os
 
 try:
     from rpy2.robjects import conversion, numpy2ri, pandas2ri
@@ -16,52 +18,81 @@ except ModuleNotFoundError:
         "[bold yellow]rpy2 is not installed. Install with [green]pip install rpy2 [yellow]to run tools with R support."
     )
 
-def _setup_RcppML(
-):
-    """Set up rpy2 to run edgeR"""
-    numpy2ri.activate()
-    pandas2ri.activate()
-    RcppML = _try_import_bioc_library("RcppML")
+location = os.path.dirname(os.path.realpath(__file__))
+NMFfilePath = os.path.join(location, '..','datasets', "NMF_varGene.csv")
 
-    return RcppML
+from TrajAtlas.TrajDiff.trajDiff import Tdiff
+tdiff = Tdiff()
 
-def _try_import_bioc_library(
-    name: str,
-):
-    """Import R packages.
+def getTrajExpression(data: MuData | AnnData,
+                      subsetLineage: str = None,
+                      run_milo=True,
+                      run_pseudobulk=True,
+                      feature_key: str="rna",
+                      n_interval: int=100,
+                      milo_nhood_prop:float = 0.1,
+                      sample_col: str = None,
+                      group_col: str = None,
+                      time_col: str = None,
+                      njob: int = -1,
+                      min_cell: int =4,
+                     ):
+    if isinstance(data, MuData):
+        adata = data[feature_key]
+        mdata = data
+    if isinstance(data, AnnData):
+        adata = data
+        mdata = tdiff.load(adata)
+    if subsetLineage != None:
+        adata=adata[adata.obs[subsetLineage]]
+        run_milo=True
+        run_pseudobulk=True
+    if sample_col == None:
+        try:
+            sample_col = mdata["tdiff"].uns["sample_col"]
+        except KeyError:
+            print('Please specify sample_col parameter first')
+            raise
+    if sample_col == None:
+        try:
+            sample_col = mdata["tdiff"].uns["sample_col"]
+        except KeyError:
+            print('Please specify sample_col parameter first')
+            raise
+    if group_col == None:
+        try:
+            group_col = mdata["tdiff"].uns["group_col"]
+        except KeyError:
+            print('Please specify group_col parameter first')
+            raise
+    if time_col == None:
+        try:
+            time_col = mdata["tdiff"].uns["time_col"]
+        except KeyError:
+            print('Please specify time_col parameter first')
+            raise
+    if run_milo == True:
+        tdiff.make_nhoods(mdata['rna'], prop=milo_nhood_prop)
+        mdata =  tdiff.count_nhoods(mdata, sample_col=sample_col)
+    if run_pseudobulk == True:
+        pseudobulk=tdiff.make_pseudobulk_parallel(mdata=mdata,sample_col=sample_col,
+                                                  group_col=group_col,time_col=time_col,njob=njob,min_cell=min_cell)
+    wholeCpm=tdiff.make_whole_cpm(mdata)
+    tdiff._make_range(mdata,only_range=True)
+    tdiff.permute_point_cpm_parallel(mdata)
+    return(mdata)
 
-    Args:
-        name (str): R packages name
-    """
-    try:
-        _r_lib = importr(name)
-        return _r_lib
-    except PackageNotInstalledError:
-        print(f"Install Bioconductor library `{name!r}` first as `BiocManager::install({name!r}).`")
-        raise
-        
-def _detect_RcppML():
-    """Import R packages.
-
-    Args:
-        name (str): R packages name
-    """
-    try:
-        _r_lib = importr("RcppML")
-        return True
-    except PackageNotInstalledError:
-        return False
 
 def find_gene_module(mdata: MuData,
                     varGene: str | None=None,
                     bin_threshold: int |None=30,
                     gene_threshold:int | None=1000,
-                     n_factors: int | None=15
+                    n_factors: int | None=15
                     ):
     RcppML= _setup_RcppML()
     keys_to_delete = []
     if varGene==None:
-        varGene=pd.read_csv("../../../../important_processed_data/NMF_varGene.csv",index_col=0)
+        varGene=pd.read_csv(NMFfilePath,index_col=0)
         varGene=varGene["x"]
     
     factorDict={}
