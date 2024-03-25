@@ -1,6 +1,6 @@
 .. module:: TrajAtlas.TRAVMap
 
-TDiff
+TRAVMap
 =======
 A module for detecting psedotemporal gene module.
 

@@ -155,7 +155,7 @@ tja.TRAVMap.plotGeneModule(tdata,sample="BmscAging_Young_MA4",factor="NMF_6",gen
 
 
     
-![png](image/gene_module_NMF6)
+![png](image/gene_module_NMF6.png)
     
 
 
@@ -177,7 +177,7 @@ tja.TRAVMap.plotGeneModule(tdata,sample="BmscAging_Young_MA4",factor="NMF_7",gen
 
 
     
-![png](image/gene_module_NMF7)
+![png](image/gene_module_NMF7.png)
     
 
 

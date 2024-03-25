@@ -24,3 +24,4 @@ TrajAtlas has a modular API, organized around multiple modules
 
     trajdiff
     model
+    TRAVMap

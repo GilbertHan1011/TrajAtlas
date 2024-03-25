@@ -58,7 +58,7 @@ sc.pl.umap(adata, color=["group","pred_level3_anno"], wspace=0.3, size=8)
 
 
     
-![png](output_8_1.png)
+![png](image/output_8_1.png)
     
 
 
@@ -260,7 +260,7 @@ tdiff.plotDAheatmap(tdata,row_split=sampleDf.group,left_annotation=row_ha)
 
 
     
-![png](output_19_2.png)
+![png](image/output_19_2.png)
     
 
 

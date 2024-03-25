@@ -12,4 +12,5 @@ A class for differential pseudotime analysis. We referred to the method used in 
     :toctree: _autosummary/TrajDiff
 
     TrajDiff.Tdiff
+    TrajDiff.split_gene
 

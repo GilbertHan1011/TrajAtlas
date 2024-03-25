@@ -130,32 +130,6 @@ def split_gene(
     stage_threshold: int = 10,
     select_genes:list = None
     ):
-    """ Group genes into gene clusters based on their pseudotemporal expression patterns. Currently, we offer two clustering strategies: Kmeans and Stage.
-    In `Kmeans` mode, genes are grouped using Kmeans clustering, which identifies differential expression patterns between two groups.
-    In `Stage` mode, genes are grouped based on the stage (early or late) at which they exhibit differential expression (up or down).
-
-    .. seealso::
-        - See 
-
-
-    Parameters
-    ----------
-    mdata
-        MuData object with pseudotemporal gene expression profile in MuData['tdiff']uns["cpm_dict"].
-    varGene
-        Gene list to subset genes. By default, we use top 2000 highly variable genes in Differentiation Atlas.
-    interval_threshold
-        Minimal pseudotime interval number to check which sample to keep. (default: 30)
-    gene_threshold
-        Minimal gene number to check which sample to keep. (default: 1000)
-    n_factors
-        Number of NMF components. (default: '15')
-
-
-    Returns
-    -----------------
-    Nothing. But update MuData in `MuData['tdiff']uns["factor_dict"]`.
-    """
     if mode not in ["Kmean", "Stage"]:
             raise ValueError("mode must be one of  'Kmean' 或 'Stage'")
     try:

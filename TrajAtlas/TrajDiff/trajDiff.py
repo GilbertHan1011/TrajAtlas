@@ -17,7 +17,7 @@ import PyComplexHeatmap as pch
 from sklearn.preprocessing import scale
 import matplotlib.pyplot as plt
 
-from TrajAtlas.TrajDiff.trajdiff_utils_9 import _test_binom, _test_gene_binom, _test_whole_gene, _row_scale,_graph_spatial_fdr,_mergeVar
+from TrajAtlas.TrajDiff.trajdiff_utils import _test_binom, _test_gene_binom, _test_whole_gene, _row_scale,_graph_spatial_fdr,_mergeVar
 from TrajAtlas.utils._env import _setup_rpy2
 
 pd.DataFrame.iteritems = pd.DataFrame.items

@@ -48,6 +48,7 @@ Contents
    installation
    tutorial/index
    api/index
+   release_notes
    contributing
    references
 
