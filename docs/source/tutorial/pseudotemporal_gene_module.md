@@ -1,7 +1,3 @@
-```python
-import sys
-sys.path.append("../../../../TrajAtlas/")
-```
 
 # Detect pseudotemporal gene modules with TRAVMap
 
