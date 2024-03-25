@@ -37,3 +37,4 @@ statsmodels>=0.14.0
 PyComplexHeatmap==1.6.4
 scikit-learn
 optax==0.1.5
+docrep==0.3.2
