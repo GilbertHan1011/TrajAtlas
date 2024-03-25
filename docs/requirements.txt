@@ -22,7 +22,7 @@ sphinx_design==0.5.0
 sphinx_copybutton==0.5.2
 sphinx-autodoc-typehints==2.0.0
 sphinx-tippy==0.4.1
-myst-nb
+myst-nb==1.0.0rc0
 furo==2024.1.29
 anndata==0.9.1
 numpy>=1.23.5
