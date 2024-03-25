@@ -357,7 +357,7 @@ def gene_trends(
     ncols: int = 2,
     suptitle: Optional[str] = None,
     return_models: bool = False,
-    n_jobs: Optional[int] = 1,
+    njobs: Optional[int] = 1,
     show_progress_bar: bool = True,
     figsize: Optional[Tuple[float, float]] = None,
     dpi: Optional[int] = None,
@@ -497,7 +497,7 @@ def gene_trends(
         filter_all_failed=False,
         parallel_kwargs={
             "show_progress_bar": show_progress_bar,
-            "n_jobs": _get_n_cores(n_jobs, len(genes)),
+            "njobs": _get_n_cores(njobs, len(genes)),
             "backend": _get_backend(models, backend),
         },
         **kwargs,

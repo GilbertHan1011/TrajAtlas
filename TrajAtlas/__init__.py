@@ -8,6 +8,6 @@ import warnings
 
 from TrajAtlas import TrajDiff
 from . import TrajDiff as diff
-from . import model, utils
+from . import model, utils,TRAVMap
 
 __all__ = ["TrajDiff", "model", "utils", "diff"]

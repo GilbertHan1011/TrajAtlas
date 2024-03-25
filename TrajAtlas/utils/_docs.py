@@ -18,13 +18,13 @@ dpi
     Dots per inch.
 save
     Filename where to save the plot."""
-_n_jobs = """\
-n_jobs
+_njobs = """\
+njobs
     Number of parallel jobs. If -1, use all available cores. If :obj:`None` or 1, the execution is sequential."""
 _parallel = f"""\
 show_progress_bar
     Whether to show a progress bar. Disabling it may slightly improve performance.
-{_n_jobs}
+{_njobs}
 backend
     Which backend to use for parallelization. See :class:`~joblib.Parallel` for valid options."""
 _model = """\
@@ -166,7 +166,7 @@ solver
 use_petsc
     Whether to use solvers from :mod:`petsc4py` or :mod:`scipy`. Recommended for large problems.
     If no installation is found, defaults to :func:`~scipy.sparse.linalg.gmres`.
-n_jobs
+njobs
     Number of parallel jobs to use when using an iterative solver.
 backend
     Which backend to use for multiprocessing. See :class:`~joblib.Parallel` for valid options.
@@ -205,7 +205,7 @@ def inject_docs(**kwargs: Any):
 
 d = DocstringProcessor(
     plotting=_plotting,
-    n_jobs=_n_jobs,
+    njobs=_njobs,
     parallel=_parallel,
     model=_model,
     adata=_adata,

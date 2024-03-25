@@ -214,7 +214,8 @@ class Tdiff:
 
         Args:
             data: AnnData object with neighbourhoods defined in `obsm['nhoods']` or MuData object with a modality with neighbourhoods defined in `obsm['nhoods']`
-            sample_col: Column in adata.obs that contains sample information
+            sample_col
+                Keys in :attr:`~anndata.AnnData.obs` that you store sample information.
             feature_key: If input data is MuData, specify key to cell-level AnnData object. (default: 'rna')
 
         Returns:
@@ -549,7 +550,10 @@ class Tdiff:
 
         mdata["tdiff"].var[f"nhood_{anno_col}"] = mean_anno_val
 
-    def add_covariate_to_nhoods_var(self, mdata: MuData, new_covariates: list[str], feature_key: str | None = "rna"):
+    def add_covariate_to_nhoods_var(
+        self, mdata: MuData, 
+        new_covariates: list[str], 
+        feature_key: str | None = "rna"):
         """Add covariate from cell-level obs to sample-level obs. These should be covariates for which a single value can be assigned to each sample.
 
         Args:
@@ -905,7 +909,7 @@ class Tdiff:
         mdata: MuData,
         fix_libsize=False,
         sample_column:str|None=None,
-        n_jobs : int =-1
+        njobs : int =-1
     ):
         """perform CPM in all sample
     
@@ -1030,7 +1034,7 @@ class Tdiff:
             df_res_dict[i]=df_filter
             return(df_filter.copy())
         
-        results = Parallel(n_jobs=njob)(delayed(process_iteration)(i) for i in tqdm(range(nhoods.shape[1])))
+        results = Parallel(njobs=njob)(delayed(process_iteration)(i) for i in tqdm(range(nhoods.shape[1])))
         df_res = pd.concat(results)
         #df_res = results[0].copy()
         #for result in results[1:]:
@@ -1330,8 +1334,8 @@ class Tdiff:
             mean_df.columns=mean_df.columns+"_sep_"+indexCell[i]                
             return(res, mean_df)
         print("Using edgeR to find DEG......")
-        #results = joblib.Parallel(n_jobs=njob)(joblib.delayed(da)(i) for i in tqdm(range(10)))
-        results = Parallel(n_jobs=njob)(delayed(da)(i) for i in tqdm(range(nhoods.shape[1])))
+        #results = joblib.Parallel(njobs=njob)(joblib.delayed(da)(i) for i in tqdm(range(10)))
+        results = Parallel(njobs=njob)(delayed(da)(i) for i in tqdm(range(nhoods.shape[1])))
         res_df = pd.DataFrame()
         res_df_cpm=pd.DataFrame()
         # Merge DataFrames from the dictionary one by one, handling None values
@@ -1454,7 +1458,7 @@ class Tdiff:
         num_jobs = njob  # Use all available cores, adjust as needed
         print("add spatial FDR......")
         # Use Parallel from joblib to parallelize the processing
-        results = Parallel(n_jobs=njob)(delayed(process_column)(i) for i in tqdm(range(p_df.shape[1])))
+        results = Parallel(njobs=njob)(delayed(process_column)(i) for i in tqdm(range(p_df.shape[1])))
         
         # Extract results and fill the DataFrame
         for keep_nhoods, varIndex, adjp in results:
@@ -1843,8 +1847,8 @@ class Tdiff:
             return(mean_df)
         resDict={}
         print("Using edgeR to find CPM......")
-        #results = joblib.Parallel(n_jobs=njob)(joblib.delayed(da)(i) for i in tqdm(range(10)))
-        results = Parallel(n_jobs=njob)(delayed(da)(i) for i in tqdm(range(nhoods.shape[1])))
+        #results = joblib.Parallel(njobs=njob)(joblib.delayed(da)(i) for i in tqdm(range(10)))
+        results = Parallel(njobs=njob)(delayed(da)(i) for i in tqdm(range(nhoods.shape[1])))
 
         res_df = pd.DataFrame()
         
@@ -1921,7 +1925,7 @@ class Tdiff:
 
 
     def permute_point_cpm_parallel(self,mdata, mode:str="DE",
-                                   n: int = 100, n_jobs: int = -1):
+                                   n: int = 100, njobs: int = -1):
         if mode == "DA":
             try:
                 tdiff = mdata["tdiff"]
@@ -1951,7 +1955,7 @@ class Tdiff:
     
         permute_point_dict = {}
     
-        results = Parallel(n_jobs=n_jobs)(
+        results = Parallel(njobs=njobs)(
             delayed(self.process_attr2_value)(attr2_value, attr1, attr2, whole_cpm, var_names, range_data, n)
             for attr2_value in tqdm(set(attr2))
         )
@@ -1966,7 +1970,7 @@ class Tdiff:
         mdata: MuData,
         fix_libsize=False,
         sample_column:str|None=None,
-        n_jobs : int =-1
+        njobs : int =-1
     ):
         """perform CPM in all sample
     
@@ -2032,8 +2036,8 @@ class Tdiff:
             return(cpmList)
         resDict={}
         print("Using edgeR to find CPM......")
-        #results = joblib.Parallel(n_jobs=njob)(joblib.delayed(da)(i) for i in tqdm(range(10)))
-        results = Parallel(n_jobs=n_jobs)(delayed(da)(i) for i in tqdm(range(len(indexCell))))
+        #results = joblib.Parallel(njobs=njob)(joblib.delayed(da)(i) for i in tqdm(range(10)))
+        results = Parallel(njobs=njobs)(delayed(da)(i) for i in tqdm(range(len(indexCell))))
         
         res_df = pd.DataFrame()
         

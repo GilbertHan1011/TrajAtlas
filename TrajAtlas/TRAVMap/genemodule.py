@@ -37,6 +37,50 @@ def getTrajExpression(data: MuData | AnnData,
                       njob: int = -1,
                       min_cell: int =4,
                      ):
+    """Get pseudotemporal expression profiles from trajectories.
+
+    .. seealso::
+        - See :doc:`../../../notebooks/tutorials/kernels/200_rna_velocity` on how to
+          identify pseudotemporal gene modules.
+    Firstly, we initiate the TrajDiff pipeline to generate pseudobulk profiles within neighborhoods. 
+    Subsequently, we project the gene expression within these neighborhoods onto the pseudotime axis.
+
+    Parameters
+    ----------
+    data
+        AnnData object with KNN graph defined in `obsp` or MuData object with a modality with KNN graph defined in `obsp`
+    subsetLineage
+        Key in :attr:`~anndata.AnnData.obs` that stores
+        lineage information that you want to subset here. The value must be boolean. See :doc:`../../../tutorial/1_OPCST_projecting` on how to predict lineage in osteogenesis datasets.
+        By default, all cells are treated as a lineage. (default: None)
+    run_milo
+        You can choose whether to run the milo pipeline to generate neighborhoods. 
+        If you have already executed the TrajDiff pipeline, you can set the parameter to False to skip this step. (default: True)
+    run_pseudobulk
+        You can choose whether to run the milo pipeline to generate pseudobulk. 
+        If you have already executed the TrajDiff pipeline, you can set the parameter to False to skip this step. (default: True)
+    feature_key
+        Key to store the cell-level AnnData object in the MuData object. (default: 'rna')
+    n_interval
+        Specify the number of intervals to split the pseudotime axis. (default: 100)
+    milo_nhood_prop
+        Fraction of cells to sample for neighbourhood index search. (default: 0.1)
+    sample_col
+        Keys in :attr:`~anndata.AnnData.obs` that you store sample information. (default: None)
+    group_col
+        Keys in :attr:`~anndata.AnnData.obs` that you store group information. (default: None)
+    time_col
+        Keys in :attr:`~anndata.AnnData.obs` that you store pseudotime information. See :doc:`../../../tutorial/1_OPCST_projecting` on how to predict pseudotime in osteogenesis datasets. (default: None)
+    njob
+        Number of parallel jobs to use.
+    min_cell
+        Minimal cell number to check which sample to keep within neighborhoods. (default: 4)
+    
+    Returns
+    -----------------
+    MuData object with pseudotemporal gene expression are stored in `MuData['tdiff']uns["cpm_dict"]`
+    """
+  
     if isinstance(data, MuData):
         adata = data[feature_key]
         mdata = data
@@ -89,6 +133,49 @@ def find_gene_module(mdata: MuData,
                     gene_threshold:int | None=1000,
                     n_factors: int | None=15
                     ):
+    """Get pseudotemporal expression profiles from trajectories.
+
+    .. seealso::
+        - See :doc:`../../../notebooks/tutorials/kernels/200_rna_velocity` on how to
+          identify pseudotemporal gene modules.
+    Firstly, we initiate the TrajDiff pipeline to generate pseudobulk profiles within neighborhoods. 
+    Subsequently, we project the gene expression within these neighborhoods onto the pseudotime axis.
+
+    Parameters
+    ----------
+    data
+        AnnData object with KNN graph defined in `obsp` or MuData object with a modality with KNN graph defined in `obsp`
+    subsetLineage
+        Key in :attr:`~anndata.AnnData.obs` that stores
+        lineage information that you want to subset here. The value must be boolean. See :doc:`../../../tutorial/1_OPCST_projecting` on how to predict lineage in osteogenesis datasets.
+        By default, all cells are treated as a lineage. (default: None)
+    run_milo
+        You can choose whether to run the milo pipeline to generate neighborhoods. 
+        If you have already executed the TrajDiff pipeline, you can set the parameter to False to skip this step. (default: True)
+    run_pseudobulk
+        You can choose whether to run the milo pipeline to generate pseudobulk. 
+        If you have already executed the TrajDiff pipeline, you can set the parameter to False to skip this step. (default: True)
+    feature_key
+        Key to store the cell-level AnnData object in the MuData object. (default: 'rna')
+    n_interval
+        Specify the number of intervals to split the pseudotime axis. (default: 100)
+    milo_nhood_prop
+        Fraction of cells to sample for neighbourhood index search. (default: 0.1)
+    sample_col
+        Keys in :attr:`~anndata.AnnData.obs` that you store sample information. (default: None)
+    group_col
+        Keys in :attr:`~anndata.AnnData.obs` that you store group information. (default: None)
+    time_col
+        Keys in :attr:`~anndata.AnnData.obs` that you store pseudotime information. See :doc:`../../../tutorial/1_OPCST_projecting` on how to predict pseudotime in osteogenesis datasets. (default: None)
+    njob
+        Number of parallel jobs to use.
+    min_cell
+        Minimal cell number to check which sample to keep within neighborhoods. (default: 4)
+    
+    Returns
+    -----------------
+    MuData object with pseudotemporal gene expression are stored in `MuData['tdiff']uns["cpm_dict"]`
+    """
     RcppML= _setup_RcppML()
     keys_to_delete = []
     if varGene==None:
