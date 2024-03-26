@@ -16,6 +16,7 @@ import scanpy as sc
 import PyComplexHeatmap as pch
 from sklearn.preprocessing import scale
 import matplotlib.pyplot as plt
+from TrajAtlas.utils._docs import d
 
 from TrajAtlas.TrajDiff.trajdiff_utils import _test_binom, _test_gene_binom, _test_whole_gene, _row_scale,_graph_spatial_fdr,_mergeVar
 from TrajAtlas.utils._env import _setup_rpy2
@@ -33,35 +34,16 @@ except ModuleNotFoundError:
         "[bold yellow]rpy2 is not installed. Install with [green]pip install rpy2 [yellow]to run tools with R support."
     )
 
+@d.dedent
 class Tdiff:
-    """Kernel which computes a transition matrix based on RNA velocity.
+    """Mudata class for differential pseudotime analysis.
 
     .. seealso::
-        - See :doc:`../../../notebooks/tutorials/kernels/200_rna_velocity` on how to
-          compute the :attr:`~cellrank.kernels.VelocityKernel.transition_matrix` based on RNA velocity.
+        - See :doc:`../../../tutorial/Step2_differential_abundance` on how to
+          compute the differential abundance with TrajDiff.
+        - See :doc:`../../../tutorial/step3_DE` on how to
+          compute the differential gene expressioon with TrajDiff.
 
-    This borrows ideas from both :cite:`manno:18` and :cite:`bergen:20`. In short, for each cell :math:`i`, we compute
-    transition probabilities :math:`T_{i, j}` to each cell :math:`j` in the neighborhood of :math:`i`. We quantify
-    how much the velocity vector :math:`v_i` of cell :math:`i` points towards each of its nearst neighbors. For
-    this comparison, we support various schemes including cosine similarity and pearson correlation.
-
-    Parameters
-    ----------
-    %(adata)s
-    %(backward)s
-    attr
-        Attribute of :class:`~anndata.AnnData` to read from.
-    xkey
-        Key in :attr:`~anndata.AnnData.layers` or :attr:`~anndata.AnnData.obsm`
-        where expected gene expression counts are stored.
-    vkey
-        Key in :attr:`~anndata.AnnData.layers` or :attr:`~anndata.AnnData.obsm` where velocities are stored.
-    gene_subset
-        List of genes to be used to compute transition probabilities.
-        If not specified, genes from :attr:`adata.var['{vkey}_genes'] <anndata.AnnData.var>` are used.
-        This feature is only available when reading from :attr:`anndata.AnnData.layers` and will be ignored otherwise.
-    kwargs
-        Keyword arguments for the :class:`~cellrank.kernels.Kernel`.
     """
 
 
@@ -75,10 +57,16 @@ class Tdiff:
     ) -> MuData:
         """Prepare a MuData object for subsequent processing.
 
-        Args:
-            input: AnnData
-            feature_key: Key to store the cell-level AnnData object in the MuData object
+        Parameters
+        ------------
+            input
+                :class:`~anndata.AnnData`.
+            feature_key
+                Key to store the cell-level AnnData object in the MuData object
+
+
         Returns:
+        ---------
             MuData: MuData object with original AnnData (default is `mudata[feature_key]`).
         """
         mdata = MuData({feature_key: input, "tdiff": AnnData(),"pseudobulk":AnnData()})
@@ -100,18 +88,26 @@ class Tdiff:
         and by selecting the nearest vertex to this position.
         Thus, multiple neighbourhoods may be collapsed to prevent over-sampling the graph space.
 
-        Args:
-            data: AnnData object with KNN graph defined in `obsp` or MuData object with a modality with KNN graph defined in `obsp`
-            neighbors_key: The key in `adata.obsp` or `mdata[feature_key].obsp` to use as KNN graph.
-                           If not specified, `make_nhoods` looks .obsp[‘connectivities’] for connectivities (default storage places for `scanpy.pp.neighbors`).
-                           If specified, it looks at .obsp[.uns[neighbors_key][‘connectivities_key’]] for connectivities.
-                           (default: None)
-            feature_key: If input data is MuData, specify key to cell-level AnnData object. (default: 'rna')
-            prop: Fraction of cells to sample for neighbourhood index search. (default: 0.1)
-            seed: Random seed for cell sampling. (default: 0)
-            copy: Determines whether a copy of the `adata` is returned. (default: False)
+        Parameters
+        --------------
+            data
+                AnnData object with KNN graph defined in `obsp` or MuData object with a modality with KNN graph defined in `obsp`
+            neighbors_key
+                The key in `adata.obsp` or `mdata[feature_key].obsp` to use as KNN graph.
+                If not specified, `make_nhoods` looks .obsp[‘connectivities’] for connectivities (default storage places for `scanpy.pp.neighbors`).
+                If specified, it looks at .obsp[.uns[neighbors_key][‘connectivities_key’]] for connectivities.
+                (default: None)
+            feature_key
+                If input data is MuData, specify key to cell-level AnnData object. (default: 'rna')
+            prop
+                Fraction of cells to sample for neighbourhood index search. (default: 0.1)
+            seed
+                Random seed for cell sampling. (default: 0)
+            copy
+                Determines whether a copy of the `adata` is returned. (default: False)
 
         Returns:
+        -----------------
             If `copy=True`, returns the copy of `adata` with the result in `.obs`, `.obsm`, and `.uns`.
             Otherwise:
 
@@ -212,13 +208,17 @@ class Tdiff:
     ):
         """Builds a sample-level AnnData object storing the matrix of cell counts per sample per neighbourhood.
 
-        Args:
-            data: AnnData object with neighbourhoods defined in `obsm['nhoods']` or MuData object with a modality with neighbourhoods defined in `obsm['nhoods']`
+        Parameters
+        ------------
+            data
+                AnnData object with neighbourhoods defined in `obsm['nhoods']` or MuData object with a modality with neighbourhoods defined in `obsm['nhoods']`
             sample_col
                 Keys in :attr:`~anndata.AnnData.obs` that you store sample information.
-            feature_key: If input data is MuData, specify key to cell-level AnnData object. (default: 'rna')
+            feature_key
+                If input data is MuData, specify key to cell-level AnnData object. (default: 'rna')
 
         Returns:
+        ---------------
             MuData object storing the original (i.e. rna) AnnData in `mudata[feature_key]`
             and the compositional anndata storing the neighbourhood cell counts in `mudata['tdiff']`.
             Here:
@@ -257,8 +257,8 @@ class Tdiff:
             data.mod["tdiff"] = sample_adata
             return data
         else:
-            tdiff_mdata = MuData({feature_key: adata, "tdiff": sample_adata})
-            return tdiff_mdata
+            tdata = MuData({feature_key: adata, "tdiff": sample_adata})
+            return tdata
 
     def da(
         self,
@@ -272,6 +272,33 @@ class Tdiff:
         shuffle_times: int | None = 20,
         FDR:int=0.05
     ):  
+        """Differential abundance pipeline.
+
+        Parameters
+        ------------
+            mdata
+                AnnData object with neighbourhoods defined in `obsm['nhoods']` or MuData object with a modality with neighbourhoods defined in `obsm['nhoods']`
+            design
+                Formula for the test, following glm syntax from R (e.g. '~ condition').
+                Terms should be columns in `tdiff[feature_key].obs`.
+            model_contrasts
+                A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
+                If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
+            subset_samples
+                subset of samples (obs in `tdata['tdiff']`) to use for the test. Defaults to None.
+            add_intercept
+                whether to include an intercept in the model. If False, this is equivalent to adding + 0 in the design formula. When model_contrasts is specified, this is set to False by default. Defaults to True.
+            feature_key
+                If input data is MuData, specify key to cell-level AnnData object. (default: 'rna')
+            shuffle_times
+                Times to randomly shuffle sample between two groups to get lambda in bionomal distribution.
+            FDR
+                False discover rate to identify significant genes.
+
+        Returns:
+        ---------------
+            MuData object storing the differential test statics.
+        """
         print("Permutation null hypothesis testing.....")
         self._make_null(mdata, design=design,model_contrasts=model_contrasts,
                         subset_samples=subset_samples,times=shuffle_times,feature_key=feature_key,FDR=FDR)
@@ -323,18 +350,18 @@ class Tdiff:
     ):
         """Performs differential abundance testing on neighbourhoods using QLF test implementation as implemented in edgeR.
 
-        Args:
+        Parameters
             mdata: MuData object
             design: Formula for the test, following glm syntax from R (e.g. '~ condition').
-                    Terms should be columns in `tdiff_mdata[feature_key].obs`.
+                    Terms should be columns in `tdata[feature_key].obs`.
             model_contrasts: A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
                             If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
-            subset_samples: subset of samples (obs in `tdiff_mdata['tdiff']`) to use for the test. Defaults to None.
+            subset_samples: subset of samples (obs in `tdata['tdiff']`) to use for the test. Defaults to None.
             add_intercept: whether to include an intercept in the model. If False, this is equivalent to adding + 0 in the design formula. When model_contrasts is specified, this is set to False by default. Defaults to True.
             feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
 
         Returns:
-            None, modifies `tdiff_mdata['tdiff']` in place, adding the results of the DA test to `.var`:
+            None, modifies `tdata['tdiff']` in place, adding the results of the DA test to `.var`:
             - `logFC` stores the log fold change in cell abundance (coefficient from the GLM)
             - `PValue` stores the p-value for the QLF test before multiple testing correction
             - `SpatialFDR` stores the the p-value adjusted for multiple testing to limit the false discovery rate,
@@ -347,7 +374,7 @@ class Tdiff:
                 sample_adata = mdata["tdiff"]
         except KeyError:
             print(
-                "[bold red]tdiff_mdata should be a MuData object with two slots:"
+                "[bold red]tdata should be a MuData object with two slots:"
                 " feature_key and 'tdiff' - please run tdiff.count_nhoods() first"
             )
             raise
@@ -480,23 +507,28 @@ class Tdiff:
     ):
         """Assigns a categorical label to neighbourhoods, based on the most frequent label among cells in each neighbourhood. This can be useful to stratify DA testing results by cell types or samples.
 
-        Args:
-            mdata: MuData object
-            anno_col: Column in adata.obs containing the cell annotations to use for nhood labelling
-            feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
+        Parameters
+        ---------------
+            mdata
+                MuData object
+            anno_col
+                Column in adata.obs containing the cell annotations to use for nhood labelling
+            feature_key
+                If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
 
         Returns:
+        -------------------
             None. Adds in place:
-            - `tdiff_mdata['tdiff'].var["nhood_annotation"]`: assigning a label to each nhood
-            - `tdiff_mdata['tdiff'].var["nhood_annotation_frac"]` stores the fraciton of cells in the neighbourhood with the assigned label
-            - `tdiff_mdata['tdiff'].varm['frac_annotation']`: stores the fraction of cells from each label in each nhood
-            - `tdiff_mdata['tdiff'].uns["annotation_labels"]`: stores the column names for `tdiff_mdata['tdiff'].varm['frac_annotation']`
+            - `tdata['tdiff'].var["nhood_annotation"]`: assigning a label to each nhood
+            - `tdata['tdiff'].var["nhood_annotation_frac"]` stores the fraciton of cells in the neighbourhood with the assigned label
+            - `tdata['tdiff'].varm['frac_annotation']`: stores the fraction of cells from each label in each nhood
+            - `tdata['tdiff'].uns["annotation_labels"]`: stores the column names for `tdata['tdiff'].varm['frac_annotation']`
         """
         try:
             sample_adata = mdata["tdiff"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
+                "tdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         adata = mdata[feature_key]
@@ -523,18 +555,23 @@ class Tdiff:
     def annotate_nhoods_continuous(self, mdata: MuData, anno_col: str, feature_key: str | None = "rna"):
         """Assigns a continuous value to neighbourhoods, based on mean cell level covariate stored in adata.obs. This can be useful to correlate DA log-foldChanges with continuous covariates such as pseudotime, gene expression scores etc...
 
-        Args:
-            mdata: MuData object
-            anno_col: Column in adata.obs containing the cell annotations to use for nhood labelling
-            feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
+        Parameters
+        ----------------------------
+            mdata
+                MuData object
+            anno_col
+                Column in adata.obs containing the cell annotations to use for nhood labelling
+            feature_key
+                If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
 
         Returns:
+        -----------------
             None. Adds in place:
-            - `tdiff_mdata['tdiff'].var["nhood_{anno_col}"]`: assigning a continuous value to each nhood
+            - `tdata['tdiff'].var["nhood_{anno_col}"]`: assigning a continuous value to each nhood
         """
         if "tdiff" not in mdata.mod:
             raise ValueError(
-                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
+                "tdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
             )
         adata = mdata[feature_key]
 
@@ -556,19 +593,24 @@ class Tdiff:
         feature_key: str | None = "rna"):
         """Add covariate from cell-level obs to sample-level obs. These should be covariates for which a single value can be assigned to each sample.
 
-        Args:
-            mdata: MuData object
-            new_covariates: columns in `tdiff_mdata[feature_key].obs` to add to `tdiff_mdata['tdiff'].obs`.
-            feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
+        Parameters
+        ---------------
+            mdata
+                MuData object
+            new_covariates
+                columns in `tdata[feature_key].obs` to add to `tdata['tdiff'].obs`.
+            feature_key
+                If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
 
         Returns:
-            None, adds columns to `tdiff_mdata['tdiff']` in place
+        --------------
+            None, adds columns to `tdata['tdiff']` in place
         """
         try:
             sample_adata = mdata["tdiff"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
+                "tdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         adata = mdata[feature_key]
@@ -597,14 +639,19 @@ class Tdiff:
     def build_nhood_graph(self, mdata: MuData, basis: str = "X_umap", feature_key: str | None = "rna"):
         """Build graph of neighbourhoods used for visualization of DA results
 
-        Args:
-            mdata: MuData object
-            basis: Name of the obsm basis to use for layout of neighbourhoods (key in `adata.obsm`). Defaults to "X_umap".
-            feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
+        Parameters
+        -----------------------
+            mdata:
+                MuData object
+            basis
+                Name of the obsm basis to use for layout of neighbourhoods (key in `adata.obsm`). Defaults to "X_umap".
+            feature_key
+                If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
 
         Returns:
-            - `tdiff_mdata['tdiff'].varp['nhood_connectivities']`: graph of overlap between neighbourhoods (i.e. no of shared cells)
-            - `tdiff_mdata['tdiff'].var["Nhood_size"]`: number of cells in neighbourhoods
+        ------------------------
+            - `tdata['tdiff'].varp['nhood_connectivities']`: graph of overlap between neighbourhoods (i.e. no of shared cells)
+            - `tdata['tdiff'].var["Nhood_size"]`: number of cells in neighbourhoods
         """
         adata = mdata[feature_key]
         # # Add embedding positions
@@ -623,19 +670,24 @@ class Tdiff:
     def add_nhood_expression(self, mdata: MuData, layer: str | None = None, feature_key: str | None = "rna"):
         """Calculates the mean expression in neighbourhoods of each feature.
 
-        Args:
-            mdata: MuData object
-            layer: If provided, use `tdiff_mdata[feature_key][layer]` as expression matrix instead of `tdiff_mdata[feature_key].X`. Defaults to None.
-            feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
+        Parameters
+        ----------------
+            mdata
+                MuData object
+            layer
+                If provided, use `tdata[feature_key][layer]` as expression matrix instead of `tdata[feature_key].X`. Defaults to None.
+            feature_key
+                If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
 
         Returns:
-            Updates adata in place to store the matrix of average expression in each neighbourhood in `tdiff_mdata['tdiff'].varm['expr']`
+        -------------
+            Updates adata in place to store the matrix of average expression in each neighbourhood in `tdata['tdiff'].varm['expr']`
         """
         try:
             sample_adata = mdata["tdiff"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with two slots:"
+                "tdata should be a MuData object with two slots:"
                 " feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
             )
             raise
@@ -702,7 +754,7 @@ class Tdiff:
             sample_adata = mdata["tdiff"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
+                "tdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
             )
             raise
 
@@ -778,7 +830,7 @@ class Tdiff:
             pseudobulk=mdata["pseudobulk"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
+                "tdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         adata = mdata[feature_key]
@@ -812,13 +864,33 @@ class Tdiff:
 
     def plotDAheatmap(self,
                 mdata:MuData,
-                vmax:int or None=3,
-                vmin:int or None=-3,
-                n_interval:int or None = 100,
-                col_cluster:bool or None=False,
-                cmap:str or None="RdBu_r",
+                vmax:int =3,
+                vmin:int =-3,
+                n_interval:int  = 100,
+                col_cluster:bool =False,
+                cmap:str="RdBu_r",
                 **kwarg):
+        """Plot differential abundance heatmap.
 
+        Parameters
+        ----------------
+            mdata
+                MuData object previously run **tdiff.da** pipeline.
+            vmax
+                Max threshold of heatmap. (default : 3)
+            vmin
+                Max threshold of expression.(default : -3)
+            n_interval
+                Intervals number to split pseudotime axis. (default : 100)
+            col_cluster
+                Wether to cluster column (pseudotime axis). (default : False)
+            cmap
+                Color map of heatmap. (default : RdBu_r)
+
+        Returns:
+        -------------
+            Nothing. But plot differential abundance heatmap.
+        """
         try:
             tdiff = mdata["tdiff"]
         except KeyError:
@@ -913,10 +985,11 @@ class Tdiff:
     ):
         """perform CPM in all sample
     
-        Args:
-            mdata: MuData object
+        Parameters
+            mdata
+                MuData object
         Returns:
-            None, modifies `tdiff_mdata['tdiff']` in place, adding the results of the DA test to `.var`:
+            None, modifies `tdata['tdiff']` in place, adding the results of the DA test to `.var`:
             - `logFC` stores the log fold change in cell abundance (coefficient from the GLM)
             - `PValue` stores the p-value for the QLF test before multiple testing correction
             - `SpatialFDR` stores the the p-value adjusted for multiple testing to limit the false discovery rate,
@@ -926,7 +999,7 @@ class Tdiff:
             tdiff=mdata["tdiff"]
         except KeyError:
             print(
-                "[bold red]tdiff_mdata should be a MuData object with three slots:"
+                "[bold red]tdata should be a MuData object with three slots:"
                 " feature_key and 'tdiff' - please make_pseudobulk_parallel() first"
             )
             raise
@@ -976,7 +1049,7 @@ class Tdiff:
             sample_adata = mdata["tdiff"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
+                "tdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         varTable=sample_adata.var
@@ -998,8 +1071,37 @@ class Tdiff:
                        group_col: str | None = "Group",
                        time_col:str | None = "Time",
                         other_col=[],
-                        shuffle:bool = False,
                         njob: int = -1):
+        """ Make pseudobulk within each neighborhoods.
+
+        Parameters
+        ------------
+            mdata
+                AnnData object with neighbourhoods defined in `obsm['nhoods']` or MuData object with a modality with neighbourhoods defined in `obsm['nhoods']`
+            feature_key
+                If input data is MuData, specify key to cell-level AnnData object. (default: 'rna')
+            min_cell
+                Minimal cell number to check which sample to keep within neighborhoods. (default: 3)
+            sample_col
+                Keys in :attr:`~anndata.AnnData.obs` that you store sample information. (default: "Sample")
+            group_col
+                Keys in :attr:`~anndata.AnnData.obs` that you store group information. (default: "Group")
+            time_col
+                Keys in :attr:`~anndata.AnnData.obs` that you store pseudotime information. See :doc:`../../../tutorial/1_OPCST_projecting` on how to predict pseudotime in osteogenesis datasets. (default: "Time")
+            other_col
+                Keys in :attr:`~anndata.AnnData.obs` that you want to keep in pseudobulk.
+            njob
+                Number of parallel jobs to use. (default : -1)
+
+        Returns:
+        ---------------
+            MuData object storing pseudobulk in `mudata['pseudobulk']`.
+            Here:
+            - `mudata['tdiff'].obs_names` are samples (defined from `adata.obs['sample_col']`)
+            - `mudata['tdiff'].var_names` are features
+            - `mudata['tdiff'].X` is the matrix of pseduobulk from each
+            sample in each neighbourhood
+        """
         adata = mdata[feature_key]
         if isinstance(adata, AnnData):
             try:
@@ -1066,12 +1168,105 @@ class Tdiff:
         FDR_threshold : int=0.05,
         n_interval: int = 100
         ):
+        """Builds a sample-level AnnData object storing the matrix of cell counts per sample per neighbourhood.
+
+        Parameters
+        ------------
+            data
+                AnnData object with neighbourhoods defined in `obsm['nhoods']` or MuData object with a modality with neighbourhoods defined in `obsm['nhoods']`
+            sample_col
+                Keys in :attr:`~anndata.AnnData.obs` that you store sample information.
+            feature_key
+                If input data is MuData, specify key to cell-level AnnData object. (default: 'rna')
+
+        Returns:
+        ---------------
+            MuData object storing the original (i.e. rna) AnnData in `mudata[feature_key]`
+            and the compositional anndata storing the neighbourhood cell counts in `mudata['tdiff']`.
+            Here:
+            - `mudata['tdiff'].obs_names` are samples (defined from `adata.obs['sample_col']`)
+            - `mudata['tdiff'].var_names` are neighbourhoods
+            - `mudata['tdiff'].X` is the matrix counting the number of cells from each
+            sample in each neighbourhood
+        """
+        if isinstance(data, MuData):
+            adata = data[feature_key]
+            is_MuData = True
+        if isinstance(data, AnnData):
+            adata = data
+            is_MuData = False
+        if isinstance(adata, AnnData):
+            try:
+                nhoods = adata.obsm["nhoods"]
+            except KeyError:
+                print('Cannot find "nhoods" slot in adata.obsm -- please run tdiff.make_nhoods(adata)')
+                raise
+        # Make nhood abundance matrix
+        sample_dummies = pd.get_dummies(adata.obs[sample_col])
+        all_samples = sample_dummies.columns
+        sample_dummies = csr_matrix(sample_dummies.values)
+        nhood_count_mat = nhoods.T.dot(sample_dummies)
+        sample_obs = pd.DataFrame(index=all_samples)
+        sample_adata = AnnData(X=nhood_count_mat.T, obs=sample_obs, dtype=np.float32)
+        sample_adata.uns["sample_col"] = sample_col
+        # Save nhood index info
+        sample_adata.var["index_cell"] = adata.obs_names[adata.obs["nhood_ixs_refined"] == 1]
+        sample_adata.var["kth_distance"] = adata.obs.loc[
+            adata.obs["nhood_ixs_refined"] == 1, "nhood_kth_distance"
+        ].values
+
+        if is_MuData is True:
+            data.mod["tdiff"] = sample_adata
+            return data
+        else:
+            tdata = MuData({feature_key: adata, "tdiff": sample_adata})
+            return tdata
+
+    def da(
+        self,
+        mdata,
+        design: str,
+        time_col: str | None = "pseduoPred",
+        model_contrasts: str | None = None,
+        subset_samples: list[str] | None = None,
+        add_intercept: bool = True,
+        feature_key: str | None = "rna",
+        shuffle_times: int | None = 20,
+        FDR:int=0.05
+    ):  
+        """Differential expression pipeline.
+
+        Parameters
+        ------------
+            mdata
+                AnnData object with neighbourhoods defined in `obsm['nhoods']` or MuData object with a modality with neighbourhoods defined in `obsm['nhoods']`
+            design
+                Formula for the test, following glm syntax from R (e.g. '~ condition').
+                Terms should be columns in `tdiff[feature_key].obs`.
+            model_contrasts
+                A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
+                If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
+            subset_samples
+                subset of samples (obs in `tdata['tdiff']`) to use for the test. Defaults to None.
+            add_intercept
+                whether to include an intercept in the model. If False, this is equivalent to adding + 0 in the design formula. When model_contrasts is specified, this is set to False by default. Defaults to True.
+            feature_key
+                If input data is MuData, specify key to cell-level AnnData object. (default: 'rna')
+            shuffle_times
+                Times to randomly shuffle sample between two groups to get lambda in bionomal distribution.
+            FDR
+                False discover rate to identify significant genes.
+
+        Returns:
+        ---------------
+            MuData object storing the differential test statics.
+        """
         try:
             sample_adata = mdata["tdiff"]
             pseudobulk=mdata["pseudobulk"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with three slots: feature_key ,'tdiff', and 'pseudobulk' - please run tdiff.count_nhoods(adata) first"
+                "tdata should be a MuData object with three slots: feature_key ,'tdiff', and 'pseudobulk' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         time_col=pseudobulk.uns["time_col"]
@@ -1103,7 +1298,7 @@ class Tdiff:
             pseudobulk=mdata["pseudobulk"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with three slots: feature_key ,'tdiff', and 'pseudobulk' - please run tdiff.count_nhoods(adata) first"
+                "tdata should be a MuData object with three slots: feature_key ,'tdiff', and 'pseudobulk' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         if genes==None:
@@ -1183,18 +1378,18 @@ class Tdiff:
     ):
         """Performs differential abundance testing on neighbourhoods using QLF test implementation as implemented in edgeR.
 
-        Args:
+        Parameters
             mdata: MuData object
             design: Formula for the test, following glm syntax from R (e.g. '~ condition').
-                    Terms should be columns in `tdiff_mdata[feature_key].obs`.
+                    Terms should be columns in `tdata[feature_key].obs`.
             model_contrasts: A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
                             If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
-            subset_samples: subset of samples (obs in `tdiff_mdata['tdiff']`) to use for the test. Defaults to None.
+            subset_samples: subset of samples (obs in `tdata['tdiff']`) to use for the test. Defaults to None.
             add_intercept: whether to include an intercept in the model. If False, this is equivalent to adding + 0 in the design formula. When model_contrasts is specified, this is set to False by default. Defaults to True.
             feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
 
         Returns:
-            None, modifies `tdiff_mdata['tdiff']` in place, adding the results of the DA test to `.var`:
+            None, modifies `tdata['tdiff']` in place, adding the results of the DA test to `.var`:
             - `logFC` stores the log fold change in cell abundance (coefficient from the GLM)
             - `PValue` stores the p-value for the QLF test before multiple testing correction
             - `SpatialFDR` stores the the p-value adjusted for multiple testing to limit the false discovery rate,
@@ -1207,7 +1402,7 @@ class Tdiff:
                 sample_adata = mdata["pseudobulk"]
         except KeyError:
             print(
-                "[bold red]tdiff_mdata should be a MuData object with three slots:"
+                "[bold red]tdata should be a MuData object with three slots:"
                 " feature_key and 'tdiff' - please make_pseudobulk_parallel() first"
             )
             raise
@@ -1493,7 +1688,7 @@ class Tdiff:
             pseudobulk = mdata["pseudobulk"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with three slots: feature_key and 'pseudobulk' - please run tdiff.count_nhoods(adata) first"
+                "tdata should be a MuData object with three slots: feature_key and 'pseudobulk' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         for i in range(times):
@@ -1529,7 +1724,7 @@ class Tdiff:
             sample_adata = mdata["tdiff"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
+                "tdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         pseudobulk=mdata["pseudobulk"]
@@ -1572,7 +1767,7 @@ class Tdiff:
             pseudobulk = mdata["pseudobulk"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with three slots: feature_key and 'tdiff' and 'pseudobulk' - please run tdiff.count_nhoods(adata) first"
+                "tdata should be a MuData object with three slots: feature_key and 'tdiff' and 'pseudobulk' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         varTable=sample_adata.var
@@ -1650,18 +1845,18 @@ class Tdiff:
     ):
         """Performs differential expression testing on neighbourhoods using QLF test implementation as implemented in edgeR.
 
-        Args:
+        Parameters
             mdata: MuData object
             design: Formula for the test, following glm syntax from R (e.g. '~ condition').
-                    Terms should be columns in `tdiff_mdata[feature_key].obs`.
+                    Terms should be columns in `tdata[feature_key].obs`.
             model_contrasts: A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
                             If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
-            subset_samples: subset of samples (obs in `tdiff_mdata['tdiff']`) to use for the test. Defaults to None.
+            subset_samples: subset of samples (obs in `tdata['tdiff']`) to use for the test. Defaults to None.
             add_intercept: whether to include an intercept in the model. If False, this is equivalent to adding + 0 in the design formula. When model_contrasts is specified, this is set to False by default. Defaults to True.
             feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
 
         Returns:
-            None, modifies `tdiff_mdata['tdiff']` in place, adding the results of the DA test to `.var`:
+            None, modifies `tdata['tdiff']` in place, adding the results of the DA test to `.var`:
             - `logFC` stores the log fold change in cell abundance (coefficient from the GLM)
             - `PValue` stores the p-value for the QLF test before multiple testing correction
             - `SpatialFDR` stores the the p-value adjusted for multiple testing to limit the false discovery rate,
@@ -1671,7 +1866,7 @@ class Tdiff:
             pseudobulk = mdata["pseudobulk"]
         except KeyError:
             print(
-                "[bold red]tdiff_mdata should be a MuData object with two slots:"
+                "[bold red]tdata should be a MuData object with two slots:"
                 " feature_key and 'tdiff' - please run tdiff.count_nhoods() first"
             )
             raise
@@ -1782,18 +1977,18 @@ class Tdiff:
     ):
         """permute expression matrix
     
-        Args:
+        Parameters
             mdata: MuData object
             design: Formula for the test, following glm syntax from R (e.g. '~ condition').
-                    Terms should be columns in `tdiff_mdata[feature_key].obs`.
+                    Terms should be columns in `tdata[feature_key].obs`.
             model_contrasts: A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
                             If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
-            subset_samples: subset of samples (obs in `tdiff_mdata['tdiff']`) to use for the test. Defaults to None.
+            subset_samples: subset of samples (obs in `tdata['tdiff']`) to use for the test. Defaults to None.
             add_intercept: whether to include an intercept in the model. If False, this is equivalent to adding + 0 in the design formula. When model_contrasts is specified, this is set to False by default. Defaults to True.
             feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
     
         Returns:
-            None, modifies `tdiff_mdata['tdiff']` in place, adding the results of the DA test to `.var`:
+            None, modifies `tdata['tdiff']` in place, adding the results of the DA test to `.var`:
             - `logFC` stores the log fold change in cell abundance (coefficient from the GLM)
             - `PValue` stores the p-value for the QLF test before multiple testing correction
             - `SpatialFDR` stores the the p-value adjusted for multiple testing to limit the false discovery rate,
@@ -1804,7 +1999,7 @@ class Tdiff:
             adata = mdata[feature_key]
         except KeyError:
             print(
-                "[bold red]tdiff_mdata should be a MuData object with three slots:"
+                "[bold red]tdata should be a MuData object with three slots:"
                 " feature_key and 'tdiff' - please make_pseudobulk_parallel() first"
             )
             raise
@@ -1873,7 +2068,7 @@ class Tdiff:
             pseudobulk = mdata["pseudobulk"]
         except KeyError:
             print(
-                "tdiff_mdata should be a MuData object with three slots: feature_key and 'pseudobulk' - please run tdiff.count_nhoods(adata) first"
+                "tdata should be a MuData object with three slots: feature_key and 'pseudobulk' - please run tdiff.count_nhoods(adata) first"
             )
             raise
         
@@ -1930,14 +2125,14 @@ class Tdiff:
             try:
                 tdiff = mdata["tdiff"]
             except KeyError:
-                print("tdiff_mdata should be a MuData object with three slots: feature_key and 'pseudobulk' - please run tdiff.count_nhoods(adata) first")
+                print("tdata should be a MuData object with three slots: feature_key and 'pseudobulk' - please run tdiff.count_nhoods(adata) first")
                 raise
         else: 
             try:
                 tdiff = mdata["tdiff"]
                 pseudobulk = mdata["pseudobulk"]
             except KeyError:
-                print("tdiff_mdata should be a MuData object with three slots: feature_key and 'pseudobulk' - please run tdiff.count_nhoods(adata) first")
+                print("tdata should be a MuData object with three slots: feature_key and 'pseudobulk' - please run tdiff.count_nhoods(adata) first")
                 raise
     
         varTable = tdiff.var
@@ -1974,16 +2169,16 @@ class Tdiff:
     ):
         """perform CPM in all sample
     
-        Args:
+        Parameters
             mdata: MuData object
             design: Formula for the test, following glm syntax from R (e.g. '~ condition').
-                    Terms should be columns in `tdiff_mdata[feature_key].obs`.
+                    Terms should be columns in `tdata[feature_key].obs`.
             model_contrasts: A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
                             If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
             feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
     
         Returns:
-            None, modifies `tdiff_mdata['tdiff']` in place, adding the results of the DA test to `.var`:
+            None, modifies `tdata['tdiff']` in place, adding the results of the DA test to `.var`:
             - `logFC` stores the log fold change in cell abundance (coefficient from the GLM)
             - `PValue` stores the p-value for the QLF test before multiple testing correction
             - `SpatialFDR` stores the the p-value adjusted for multiple testing to limit the false discovery rate,
@@ -1994,7 +2189,7 @@ class Tdiff:
             tdiff=mdata["tdiff"]
         except KeyError:
             print(
-                "[bold red]tdiff_mdata should be a MuData object with three slots:"
+                "[bold red]tdata should be a MuData object with three slots:"
                 " feature_key and 'tdiff' - please make_pseudobulk_parallel() first"
             )
             raise

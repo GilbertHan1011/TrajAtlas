@@ -2,9 +2,15 @@ from __future__ import annotations
 from scipy.stats import binom
 import numpy as np
 from anndata import AnnData
+from mudata import MuData
+from rich import print
 import pandas as pd
 import statsmodels.api as sm
 from sklearn.cluster import KMeans
+from TrajAtlas.utils._docs import d
+from typing import (
+    Literal,
+)
 
 def _test_binom(length_df,
                 times:int = 20):
@@ -23,7 +29,7 @@ def _test_binom(length_df,
     length_df["binom_p"]=p_val_list
     return(length_df)
     
-def _test_gene_binom(mdata: Mudata):
+def _test_gene_binom(mdata: MuData):
     try:
         sample_adata = mdata["tdiff"]
         pseudobulk=mdata["pseudobulk"]
@@ -121,13 +127,14 @@ def _test_whole_gene(mdata: MuData):
     pseudobulk.var["overall_gene_p"]=np.array(adjusted_p_values)
 
 
-
+@d.dedent
 def split_gene(
-    mdata : Mudata,
+    mdata : MuData,
     mode : Literal["Kmean","Stage"]="Kmean",
     FDR : int = 0.05,
     kmean_cluster : int = 10,
     stage_threshold: int = 10,
+    feature_key: str = "rna",
     select_genes:list = None
     ):
     """ Group genes into gene clusters based on their pseudotemporal expression patterns. Currently, we offer two clustering strategies: Kmeans and Stage.
@@ -135,26 +142,31 @@ def split_gene(
     In `Stage` mode, genes are grouped based on the stage (early or late) at which they exhibit differential expression (up or down).
 
     .. seealso::
-        - See 
-
+        - See :doc:`../../../tutorial/step3_DE` for how to detect pseudotemporal
+        differential genes.
 
     Parameters
     ----------
     mdata
-        MuData object with pseudotemporal gene expression profile in MuData['tdiff']uns["cpm_dict"].
-    varGene
-        Gene list to subset genes. By default, we use top 2000 highly variable genes in Differentiation Atlas.
-    interval_threshold
-        Minimal pseudotime interval number to check which sample to keep. (default: 30)
-    gene_threshold
-        Minimal gene number to check which sample to keep. (default: 1000)
-    n_factors
-        Number of NMF components. (default: '15')
+        MuData object processed by `TrajDiff` process.
+    mode
+        Gene group strategy, either `Kmean` or `Stage`. If `Kmean` were selected, genes are grouped using Kmeans clustering. If `Stage` were selected
+        genes are grouped based on the stage. (default: "Kmean")
+    FDR
+        False discovery rate to discover significant genes. (default: 0.05)
+    kmean_cluster
+        If 'Kmeans' is chosen in the mode parameters, you can specify the number of clusters for this parameter. (Default: 10)
+    stage_threshold
+        If 'Stage' is chosen in the mode parameters, you can specify the threshold of every stage (early/late) to select stage-specific genes. (Default: 10)
+    feature_key
+        Key to store the cell-level AnnData object in the MuData object. (Default: "rna")
+    select_genes
+        Custom gene sets are allowed. If not provided, we are using significant genes. (Default: None)
 
 
     Returns
     -----------------
-    Nothing. But update MuData in `MuData['tdiff']uns["factor_dict"]`.
+    Gene category. Also update MuData in `MuData[feature_key].var`.
     """
     if mode not in ["Kmean", "Stage"]:
             raise ValueError("mode must be one of  'Kmean' 或 'Stage'")
@@ -181,8 +193,8 @@ def split_gene(
         labels=pd.DataFrame(labels)
         labels.index=exprMatrix.index
         labels.columns=["geneGroup"]
-        mdata["rna"].var["Kmeans"]=np.nan
-        mdata["rna"].var["Kmeans"].loc[labels.index]=np.array(labels["geneGroup"])
+        mdata[feature_key].var["Kmeans"]=np.nan
+        mdata[feature_key].var["Kmeans"].loc[labels.index]=np.array(labels["geneGroup"])
         labels=labels["geneGroup"]
     elif mode=="Stage":
         fdr_matrix=-np.log(fdr_matrix+0.000000001)
@@ -220,7 +232,7 @@ def split_gene(
         geneSplit['geneGroup'] = pd.Categorical(geneSplit['geneGroup'])
         geneSplit.index=geneSplit["gene"]
         labels=geneSplit["geneGroup"]
-        mdata["rna"].var["Stage"]=np.nan
-        mdata["rna"].var["Stage"].loc[labels.index]=np.array(labels)
+        mdata[feature_key].var["Stage"]=np.nan
+        mdata[feature_key].var["Stage"].loc[labels.index]=np.array(labels)
     return(labels)
     

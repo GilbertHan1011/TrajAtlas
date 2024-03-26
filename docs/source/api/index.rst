@@ -8,20 +8,16 @@ Import TrajAtlas as::
 
 TrajAtlas has a modular API, organized around multiple modules
 
-- :mod:`TrajAtlas.model` compute cell-cell transition matrices using various input data modalities,
-  including RNA velocity, any pseudotime, a developmental potential, experimental time points, and more.
-- :mod:`TrajAtlas.TrajDiff` use the cell-cell transition matrix to derive insights about cellular dynamics,
-  for example, they compute initial and terminal states, fate probabilities, and driver genes. Our recommended
-  estimator is the :class:`~cellrank.estimators.GPCCA` estimator.
-- :mod:`TrajAtlas.TRAVMap` use the cell-cell transition matrix to derive insights about cellular dynamics,
-  for example, they compute initial and terminal states, fate probabilities, and driver genes. Our recommended
-  estimator is the :class:`~cellrank.estimators.GPCCA` estimator.
+- :mod:`TrajAtlas.model` projected osteogensis datasets to Differentiation Atas and OPCST model to reconstructed
+   osteoblast differentiation.
+- :mod:`TrajAtlas.TrajDiff` provided stastic framework to detect differential pseudotime abundance and differential gene expressions.
+- :mod:`TrajAtlas.TRAVMap` utilized NMF to detect pseudotemporal gene modules.
 
 
 .. toctree::
     :caption: API
     :maxdepth: 2
 
-    trajdiff
     model
+    trajdiff
     TRAVMap

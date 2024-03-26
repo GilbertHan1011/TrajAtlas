@@ -7,6 +7,7 @@ from mudata import MuData
 from TrajAtlas.TrajDiff.trajdiff_utils import _row_scale
 from TrajAtlas.utils._env import _setup_RcppML, _try_import_bioc_library, _detect_RcppML
 from anndata import AnnData
+from TrajAtlas.utils._docs import d
 import os
 
 try:
@@ -24,6 +25,7 @@ NMFfilePath = os.path.join(location, '..','datasets', "NMF_varGene.csv")
 from TrajAtlas.TrajDiff.trajDiff import Tdiff
 tdiff = Tdiff()
 
+@d.dedent
 def getTrajExpression(data: MuData | AnnData,
                       subsetLineage: str = None,
                       run_milo=True,
@@ -40,8 +42,8 @@ def getTrajExpression(data: MuData | AnnData,
     """Get pseudotemporal expression profiles from trajectories.
 
     .. seealso::
-        - See :doc:`../../../notebooks/tutorials/kernels/200_rna_velocity` on how to
-          identify pseudotemporal gene modules.
+        - See :doc:`../../../tutorial/pseudotemporal_gene_module` for how to detect pseudotemporal
+        gene modules.
     Firstly, we initiate the TrajDiff pipeline to generate pseudobulk profiles within neighborhoods. 
     Subsequently, we project the gene expression within these neighborhoods onto the pseudotime axis.
 
@@ -126,7 +128,7 @@ def getTrajExpression(data: MuData | AnnData,
     tdiff.permute_point_cpm_parallel(mdata)
     return(mdata)
 
-
+@d.dedent
 def find_gene_module(mdata: MuData,
                     varGene: list | None=None,
                     interval_threshold: int =30,
@@ -137,7 +139,8 @@ def find_gene_module(mdata: MuData,
     If RcppML was not detected, we will use sklearn.decomposition.NMF for factorization.
 
     .. seealso::
-        - See 
+        - See :doc:`../../../tutorial/pseudotemporal_gene_module` for how to detect pseudotemporal
+        gene modules.
 
 
     Parameters
@@ -208,9 +211,9 @@ def find_gene_module(mdata: MuData,
     mdata['tdiff'].uns["cpmDict"]=cpmDict
     mdata['tdiff'].uns["factor_dict"]=factorDict
 
-
+@d.dedent
 def plotGeneModule(
-                   mdata:Mudata,
+                   mdata:MuData,
                    sample:str, 
                    factor:str, 
                    gene_num: int = 20,
@@ -218,7 +221,8 @@ def plotGeneModule(
     """Plot the gene expression heatmap of the top genes within the selected gene module for the chosen sample.
 
     .. seealso::
-        - See 
+        - See :doc:`../../../tutorial/pseudotemporal_gene_module` for how to detect pseudotemporal
+        gene modules.
 
 
     Parameters
