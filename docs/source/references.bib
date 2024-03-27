@@ -18,6 +18,81 @@
   file = {/home/gilberthan/Zotero/storage/NAFVPQPY/Dann et al. - 2022 - Differential abundance testing on single-cell data.pdf}
 }
 
+@misc{debruineFastRobustNonnegative2021,
+  title = {Fast and Robust Non-Negative Matrix Factorization for Single-Cell Experiments},
+  author = {DeBruine, Zachary J. and Melcher, Karsten and Triche, Timothy J.},
+  year = {2021},
+  month = sep,
+  primaryclass = {New Results},
+  pages = {2021.09.01.458620},
+  publisher = {bioRxiv},
+  doi = {10.1101/2021.09.01.458620},
+  urldate = {2024-03-25},
+  abstract = {Non-negative matrix factorization (NMF) is an intuitively appealing method to extract additive combinations of measurements from noisy or complex data. NMF is applied broadly to text and image processing, time-series analysis, and genomics, where recent technological advances permit sequencing experiments to measure the representation of tens of thousands of features in millions of single cells. In these experiments, a count of zero for a given feature in a given cell may indicate either the absence of that feature or an insufficient read coverage to detect that feature (``dropout''). In contrast to spectral decompositions such as the Singular Value Decomposition (SVD), the strictly positive imputation of signal by NMF is an ideal fit for single-cell data with ambiguous zeroes. Nevertheless, most single-cell analysis pipelines apply SVD or Principal Component Analysis (PCA) on transformed counts because these implementations are fast while current NMF implementations are slow. To address this need, we present an accessible NMF implementation that is much faster than PCA and rivals the runtimes of state-of-the-art SVD. NMF models learned with our implementation from raw count matrices yield intuitive summaries of complex biological processes, capturing coordinated gene activity and enrichment of sample metadata. Our NMF implementation, available in the RcppML (Rcpp Machine Learning library) R package, improves upon current NMF implementations by introducing a scaling diagonal to enable convex L1 regularization for feature engineering, reproducible factor scalings, and symmetric factorizations. RcppML NMF easily handles sparse datasets with millions of samples, making NMF an attractive replacement for PCA in the analysis of single-cell experiments.},
+  archiveprefix = {bioRxiv},
+  chapter = {New Results},
+  copyright = {{\copyright} 2021, Posted by Cold Spring Harbor Laboratory. This pre-print is available under a Creative Commons License (Attribution-NoDerivs 4.0 International), CC BY-ND 4.0, as described at http://creativecommons.org/licenses/by-nd/4.0/},
+  langid = {english},
+  file = {/home/gilberthan/Zotero/storage/2227Z4L8/DeBruine et al. - 2021 - Fast and robust non-negative matrix factorization .pdf}
+}
+
+@article{dingPyComplexHeatmapPythonPackage2023,
+  title = {{{PyComplexHeatmap}}: {{A Python}} Package to Visualize Multimodal Genomics Data},
+  shorttitle = {{{PyComplexHeatmap}}},
+  author = {Ding, Wubin and Goldberg, David and Zhou, Wanding},
+  year = {2023},
+  journal = {iMeta},
+  volume = {2},
+  number = {3},
+  pages = {e115},
+  issn = {2770-596X},
+  doi = {10.1002/imt2.115},
+  urldate = {2024-03-25},
+  abstract = {PyComplexHeatmap was designed to visualize matrix data and associated metadata through sophisticated, richly annotated heatmap layouts. We have integrated the R grammar-of-graphics semantics with the Python-native matplotlib/Pandas-based data science ecosystem, allowing users to utilize built-in matplotlib colormaps and project Pandas DataFrame directly as horizontal or vertical color bars. PyComplexHeatmap supports high-level data abstraction and can display up to five data dimensions within a single heatmap visualization.},
+  copyright = {{\copyright} 2023 The Authors. iMeta published by John Wiley \& Sons Australia, Ltd on behalf of iMeta Science.},
+  file = {/home/gilberthan/Zotero/storage/M5SGDBBH/Ding et al. - 2023 - PyComplexHeatmap A Python package to visualize mu.pdf}
+}
+
+@article{houStatisticalFrameworkDifferential2023,
+  title = {A Statistical Framework for Differential Pseudotime Analysis with Multiple Single-Cell {{RNA-seq}} Samples},
+  author = {Hou, Wenpin and Ji, Zhicheng and Chen, Zeyu and Wherry, E. John and Hicks, Stephanie C. and Ji, Hongkai},
+  year = {2023},
+  month = nov,
+  journal = {Nature Communications},
+  volume = {14},
+  number = {1},
+  pages = {7286},
+  publisher = {Nature Publishing Group},
+  issn = {2041-1723},
+  doi = {10.1038/s41467-023-42841-y},
+  urldate = {2023-11-13},
+  abstract = {Pseudotime analysis with single-cell RNA-sequencing (scRNA-seq) data has been widely used to study dynamic gene regulatory programs along continuous biological processes. While many methods have been developed to infer the pseudotemporal trajectories of cells within a biological sample, it remains a challenge to compare pseudotemporal patterns with multiple samples (or replicates) across different experimental conditions. Here, we introduce Lamian, a comprehensive and statistically-rigorous computational framework for differential multi-sample pseudotime analysis. Lamian can be used to identify changes in a biological process associated with sample covariates, such as different biological conditions while adjusting for batch effects, and to detect changes in gene expression, cell density, and topology of a pseudotemporal trajectory. Unlike existing methods that ignore sample variability, Lamian draws statistical inference after accounting for cross-sample variability and hence substantially reduces sample-specific false discoveries that are not generalizable to new samples. Using both real scRNA-seq~and simulation data, including an analysis of differential immune response programs between COVID-19 patients with different disease severity levels, we demonstrate the advantages of Lamian in decoding cellular gene expression programs in continuous biological processes.},
+  copyright = {2023 The Author(s)},
+  langid = {english},
+  keywords = {Data processing,Mathematics and computing,Software,Statistical methods,Transcriptomics},
+  file = {/home/gilberthan/Zotero/storage/35FCCJVB/Hou et al. - 2023 - A statistical framework for differential pseudotim.pdf}
+}
+
+@article{liInsightsSkeletalStem2022,
+  title = {Insights into Skeletal Stem Cells},
+  author = {Li, Qiwen and Xu, Ruoshi and Lei, Kexin and Yuan, Quan},
+  year = {2022},
+  month = oct,
+  journal = {Bone Research},
+  volume = {10},
+  number = {1},
+  pages = {1--17},
+  publisher = {Nature Publishing Group},
+  issn = {2095-6231},
+  doi = {10.1038/s41413-022-00235-8},
+  urldate = {2023-02-23},
+  abstract = {The tissue-resident skeletal stem cells (SSCs), which are self-renewal and multipotent, continuously provide cells (including chondrocytes, bone cells, marrow adipocytes, and stromal cells) for the development and homeostasis of the skeletal system. In recent decade, utilizing fluorescence-activated cell sorting, lineage tracing, and single-cell sequencing, studies have identified various types of SSCs, plotted the lineage commitment trajectory, and partially revealed their properties under physiological and pathological conditions. In this review, we retrospect to SSCs identification and functional studies. We discuss the principles and approaches to identify bona fide SSCs, highlighting pioneering findings that plot the lineage atlas of SSCs. The roles of SSCs and progenitors in long bone, craniofacial tissues, and periosteum are systematically discussed. We further focus on disputes and challenges in SSC research.},
+  copyright = {2022 The Author(s)},
+  langid = {english},
+  keywords = {Bone,Physiology},
+  file = {/home/gilberthan/Zotero/storage/X95YTWFK/Li 等 - 2022 - Insights into skeletal stem cells.pdf}
+}
+
 @article{lotfollahiMappingSinglecellData2022,
   title = {Mapping Single-Cell Data to Reference Atlases by Transfer Learning},
   author = {Lotfollahi, Mohammad and Naghipourfar, Mohsen and Luecken, Malte D. and Khajavi, Matin and B{\"u}ttner, Maren and Wagenstetter, Marco and Avsec, {\v Z}iga and Gayoso, Adam and Yosef, Nir and Interlandi, Marta and Rybakov, Sergei and Misharin, Alexander V. and Theis, Fabian J.},
@@ -36,6 +111,43 @@
   langid = {english},
   keywords = {Data integration,Machine learning},
   file = {/home/gilberthan/Zotero/storage/6EJLI7FA/Lotfollahi 等 - 2022 - Mapping single-cell data to reference atlases by t.pdf}
+}
+
+@article{mizoguchiDiverseOriginBoneforming2021,
+  title = {The Diverse Origin of Bone-Forming Osteoblasts},
+  author = {Mizoguchi, Toshihide and Ono, Noriaki},
+  year = {2021},
+  journal = {Journal of Bone and Mineral Research},
+  volume = {36},
+  number = {8},
+  pages = {1432--1447},
+  issn = {1523-4681},
+  doi = {10.1002/jbmr.4410},
+  urldate = {2023-02-23},
+  abstract = {Osteoblasts are the only cells that can give rise to bones in vertebrates. Thus, one of the most important functions of these metabolically active cells is mineralized matrix production. Because osteoblasts have a limited lifespan, they must be constantly replenished by preosteoblasts, their immediate precursors. Because disruption of the regulation of bone-forming osteoblasts results in a variety of bone diseases, a better understanding of the origin of these cells by defining the mechanisms of bone development, remodeling, and regeneration is central to the development of novel therapeutic approaches. In recent years, substantial new insights into the origin of osteoblasts---largely owing to rapid technological advances in murine lineage-tracing approaches and other single-cell technologies---have been obtained. Collectively, these findings indicate that osteoblasts involved in bone formation under various physiological, pathological, and therapeutic conditions can be obtained from numerous sources. The origins of osteoblasts include, but are not limited to, chondrocytes in the growth plate, stromal cells in the bone marrow, quiescent bone-lining cells on the bone surface, and specialized fibroblasts in the craniofacial structures, such as sutures and periodontal ligaments. Because osteoblasts can be generated from local cellular sources, bones can flexibly respond to regenerative and anabolic cues. However, whether osteoblasts derived from different cellular sources have distinct functions remains to be investigated. Currently, we are at the initial stage to aptly unravel the incredible diversity of the origins of bone-forming osteoblasts. {\copyright} 2021 American Society for Bone and Mineral Research (ASBMR).},
+  langid = {english},
+  keywords = {,BONE DEVELOPMENT,BONE MARROW STROMAL CELLS,BONE REGENERATION,CHONDROCYTES,important,OSTEOBLASTS,SKELETAL STEM CELLS},
+  file = {/home/gilberthan/Zotero/storage/7Y6XLPNE/Mizoguchi 和 Ono - 2021 - The diverse origin of bone-forming osteoblasts.pdf;/home/gilberthan/Zotero/storage/IP737PRN/Mizoguchi 和 Ono - 2021 - The diverse origin of bone-forming osteoblasts.pdf;/home/gilberthan/Zotero/storage/EZGZFXR7/jbmr.html}
+}
+
+@article{rouxdebezieuxTrajectoryInferenceMultiple2024,
+  title = {Trajectory Inference across Multiple Conditions with Condiments},
+  author = {{Roux de B{\'e}zieux}, Hector and {Van den Berge}, Koen and Street, Kelly and Dudoit, Sandrine},
+  year = {2024},
+  month = jan,
+  journal = {Nature Communications},
+  volume = {15},
+  number = {1},
+  pages = {833},
+  publisher = {Nature Publishing Group},
+  issn = {2041-1723},
+  doi = {10.1038/s41467-024-44823-0},
+  urldate = {2024-03-11},
+  abstract = {In single-cell RNA sequencing (scRNA-Seq), gene expression is assessed individually for each cell, allowing the investigation of developmental processes, such as embryogenesis and cellular differentiation and regeneration, at unprecedented resolution. In such dynamic biological systems, cellular states form a continuum, e.g., for the differentiation of stem cells into mature cell types. This process is often represented via a trajectory in a reduced-dimensional representation of the scRNA-Seq dataset. While many methods have been suggested for trajectory inference, it is often unclear how to handle multiple biological groups or conditions, e.g., inferring and comparing the differentiation trajectories of wild-type and knock-out stem cell populations. In this manuscript, we present condiments, a method for the inference and downstream interpretation of cell trajectories across multiple conditions. Our framework allows the interpretation of differences between conditions at the trajectory, cell population, and gene expression levels. We start by integrating datasets from multiple conditions into a single trajectory. By comparing the cell's conditions along the trajectory's path, we can detect large-scale changes, indicative of differential progression or fate selection. We also demonstrate how to detect subtler changes by finding genes that exhibit different behaviors between these conditions along a differentiation path.},
+  copyright = {2024 The Author(s)},
+  langid = {english},
+  keywords = {Statistical methods,Transcriptomics},
+  file = {/home/gilberthan/Zotero/storage/EBKMQMAV/Roux de Bézieux et al. - 2024 - Trajectory inference across multiple conditions wi.pdf}
 }
 
 @article{xuProbabilisticHarmonizationAnnotation2021,

@@ -84,7 +84,7 @@ def getAttribute(adata,lineage: list or None = ["Fibroblast", "LepR_BMSC", "MSC"
         dfs=pd.concat([dfs,keyDf])
     key_pairs= [(dfs['sample'].iloc[i], dfs['Lineage'].iloc[i]) for i in range(dfs.shape[0])]
     partial_process_subset = partial(process_subset, sampleDict=sampleDict, lineageDict=lineageDict, adata=adata, timeDict=timeDict, timeBin=timeBin, cell_threshold=cell_threshold)
-    results = Parallel(njobs=njobs)(delayed(partial_process_subset)(*key_pair) for key_pair in tqdm(key_pairs))
+    results = Parallel(n_jobs=njobs)(delayed(partial_process_subset)(*key_pair) for key_pair in tqdm(key_pairs))
     pearson_results = [result[0] for result in results if result is not None]
     peak_results = [result[1] for result in results if result is not None]
     expr_results = [result[2] for result in results if result is not None]

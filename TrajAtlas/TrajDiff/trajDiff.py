@@ -270,7 +270,7 @@ class Tdiff:
         add_intercept: bool = True,
         feature_key: str | None = "rna",
         shuffle_times: int | None = 20,
-        FDR:int=0.05
+        FDR_threshold:int=0.05
     ):  
         """Differential abundance pipeline.
 
@@ -292,7 +292,7 @@ class Tdiff:
                 If input data is MuData, specify key to cell-level AnnData object. (default: 'rna')
             shuffle_times
                 Times to randomly shuffle sample between two groups to get lambda in bionomal distribution.
-            FDR
+            FDR_threshold
                 False discover rate to identify significant genes.
 
         Returns:
@@ -301,7 +301,7 @@ class Tdiff:
         """
         print("Permutation null hypothesis testing.....")
         self._make_null(mdata, design=design,model_contrasts=model_contrasts,
-                        subset_samples=subset_samples,times=shuffle_times,feature_key=feature_key,FDR=FDR)
+                        subset_samples=subset_samples,times=shuffle_times,feature_key=feature_key,FDR=FDR_threshold)
         print("Running differential abundance.....")
         self._da_nhoods(mdata, design=design,model_contrasts=model_contrasts,
                         subset_samples=subset_samples,feature_key=feature_key)
@@ -708,43 +708,8 @@ class Tdiff:
 
 
 
-    def permute_test_window(self,
-                            range_df, 
-                            n=100, 
-                            window_size=10, 
-                            step_size=5):
-        range_data = range_df.values
-    
-        permute_test_true_window = {}
-        permute_test_false_window = {}
-    
-        for i in range(0, n, step_size):
-            true_list = []
-            false_list = []
-    
-            start_point = i / n
-            end_point = (i + window_size) / n
-    
-            # Vectorized condition check
-            mask = (end_point >= range_data[:, 0]) & (start_point <= range_data[:, 1])
-    
-            for j, (up, down, fdr) in enumerate(range_data[mask]):
-                if fdr:
-                    true_list.append(j)
-                else:
-                    false_list.append(j)
-    
-            permute_test_true_window[i] = len(true_list)
-            permute_test_false_window[i] = len(false_list)
-            length_df = pd.DataFrame([permute_test_true_window, permute_test_false_window])
-            length_df=length_df.T
-            length_df.columns=["true","false"]
-            length_df["rate"]=length_df["true"]/(length_df["false"]+length_df["true"])
-        
-        return length_df
 
-
-    def permute_test_point(self,
+    def _permute_test_point(self,
                            mdata: MuData,
                             n:int = 100,
                            include_null:bool = True,
@@ -927,7 +892,7 @@ class Tdiff:
         groupCpmDf.columns=groupCpmDf.columns.astype("str")
         groupCpmDf=groupCpmDf.T[np.array(groupCpmDf.sum(axis=0)>0)].T
         
-        lenDf=self.permute_test_point(mdata,n=100,include_null=True,times=20)
+        lenDf=self._permute_test_point(mdata,n=100,include_null=True,times=20)
         scaled_df_group = groupCpmDf.apply(_row_scale, axis=1)
         fdr=pd.DataFrame(lenDf['binom_p'])
         fdr=-np.log10(fdr+0.00000000001)
@@ -1041,28 +1006,6 @@ class Tdiff:
 
 
 
-
-    def test_whole(self,
-                   mdata: MuData,
-                     times:int = 10):
-        try:
-            sample_adata = mdata["tdiff"]
-        except KeyError:
-            print(
-                "tdata should be a MuData object with two slots: feature_key and 'tdiff' - please run tdiff.count_nhoods(adata) first"
-            )
-            raise
-        varTable=sample_adata.var
-        sumVal=varTable.shape[0]
-        trueVal=sum(varTable["Accept"])
-        nullVal=sum(varTable["null"])/sumVal
-        if nullVal==0:
-            nullVal=1/(sumVal*times)
-        pval=1- binom.cdf(trueVal, sumVal, nullVal)
-        if trueVal == 0:
-            pval=1
-        sample_adata.uns["overall_p_val"]=pval
-
     def make_pseudobulk_parallel(self,
                        mdata: MuData,
                        min_cell:int = 3,
@@ -1074,10 +1017,14 @@ class Tdiff:
                         njob: int = -1):
         """ Make pseudobulk within each neighborhoods.
 
+        .. seealso::
+            - See :doc:`../../../tutorial/step3_DE` for how to detect pseudotemporal
+            differential genes.
+
         Parameters
         ------------
             mdata
-                AnnData object with neighbourhoods defined in `obsm['nhoods']` or MuData object with a modality with neighbourhoods defined in `obsm['nhoods']`
+                MuData object with a modality with neighbourhoods defined in `obsm['nhoods']`
             feature_key
                 If input data is MuData, specify key to cell-level AnnData object. (default: 'rna')
             min_cell
@@ -1136,7 +1083,7 @@ class Tdiff:
             df_res_dict[i]=df_filter
             return(df_filter.copy())
         
-        results = Parallel(njobs=njob)(delayed(process_iteration)(i) for i in tqdm(range(nhoods.shape[1])))
+        results = Parallel(n_jobs=njob)(delayed(process_iteration)(i) for i in tqdm(range(nhoods.shape[1])))
         df_res = pd.concat(results)
         #df_res = results[0].copy()
         #for result in results[1:]:
@@ -1153,76 +1100,8 @@ class Tdiff:
         return(adata_res)
 
 
+
     def de(
-        self,
-        mdata: MuData,
-        design: str,
-        model_contrasts: str | None = None,
-        subset_samples: list[str] | None = None,
-        add_intercept: bool = True,
-        feature_key: str | None = "rna",
-        shuffle: bool = False,
-        fix_libsize=False,
-        njob : int =-1,
-        shuffle_times : int=5,
-        FDR_threshold : int=0.05,
-        n_interval: int = 100
-        ):
-        """Builds a sample-level AnnData object storing the matrix of cell counts per sample per neighbourhood.
-
-        Parameters
-        ------------
-            data
-                AnnData object with neighbourhoods defined in `obsm['nhoods']` or MuData object with a modality with neighbourhoods defined in `obsm['nhoods']`
-            sample_col
-                Keys in :attr:`~anndata.AnnData.obs` that you store sample information.
-            feature_key
-                If input data is MuData, specify key to cell-level AnnData object. (default: 'rna')
-
-        Returns:
-        ---------------
-            MuData object storing the original (i.e. rna) AnnData in `mudata[feature_key]`
-            and the compositional anndata storing the neighbourhood cell counts in `mudata['tdiff']`.
-            Here:
-            - `mudata['tdiff'].obs_names` are samples (defined from `adata.obs['sample_col']`)
-            - `mudata['tdiff'].var_names` are neighbourhoods
-            - `mudata['tdiff'].X` is the matrix counting the number of cells from each
-            sample in each neighbourhood
-        """
-        if isinstance(data, MuData):
-            adata = data[feature_key]
-            is_MuData = True
-        if isinstance(data, AnnData):
-            adata = data
-            is_MuData = False
-        if isinstance(adata, AnnData):
-            try:
-                nhoods = adata.obsm["nhoods"]
-            except KeyError:
-                print('Cannot find "nhoods" slot in adata.obsm -- please run tdiff.make_nhoods(adata)')
-                raise
-        # Make nhood abundance matrix
-        sample_dummies = pd.get_dummies(adata.obs[sample_col])
-        all_samples = sample_dummies.columns
-        sample_dummies = csr_matrix(sample_dummies.values)
-        nhood_count_mat = nhoods.T.dot(sample_dummies)
-        sample_obs = pd.DataFrame(index=all_samples)
-        sample_adata = AnnData(X=nhood_count_mat.T, obs=sample_obs, dtype=np.float32)
-        sample_adata.uns["sample_col"] = sample_col
-        # Save nhood index info
-        sample_adata.var["index_cell"] = adata.obs_names[adata.obs["nhood_ixs_refined"] == 1]
-        sample_adata.var["kth_distance"] = adata.obs.loc[
-            adata.obs["nhood_ixs_refined"] == 1, "nhood_kth_distance"
-        ].values
-
-        if is_MuData is True:
-            data.mod["tdiff"] = sample_adata
-            return data
-        else:
-            tdata = MuData({feature_key: adata, "tdiff": sample_adata})
-            return tdata
-
-    def da(
         self,
         mdata,
         design: str,
@@ -1236,10 +1115,14 @@ class Tdiff:
     ):  
         """Differential expression pipeline.
 
+        .. seealso::
+            - See :doc:`../../../tutorial/step3_DE` for how to detect pseudotemporal
+            differential genes.
+
         Parameters
         ------------
             mdata
-                AnnData object with neighbourhoods defined in `obsm['nhoods']` or MuData object with a modality with neighbourhoods defined in `obsm['nhoods']`
+                MuData object with `tdiff` modal and `pseudobulk` modal.
             design
                 Formula for the test, following glm syntax from R (e.g. '~ condition').
                 Terms should be columns in `tdiff[feature_key].obs`.
@@ -1272,21 +1155,22 @@ class Tdiff:
         time_col=pseudobulk.uns["time_col"]
         print("Detecting differential expression in neighborhoods......")
         deg=self.da_expression(mdata,design=design,model_contrasts=model_contrasts,subset_samples=subset_samples,njob=njob,fix_libsize=fix_libsize,add_intercept=add_intercept)
-        deg=self.makeSPFDR(mdata=mdata,njob=njob)
+        deg=self._makeSPFDR(mdata=mdata,njob=njob)
         print("Permutation null hypothesis testing.....")
         null_test=self.makeShuffleDA(mdata,design=design,model_contrasts=model_contrasts,subset_samples=subset_samples,
                                     njob=njob,fix_libsize=fix_libsize,add_intercept=add_intercept,times=shuffle_times,
                                     FDR_threshold=FDR_threshold)
         print("Projecting neighborhoods to pseudotime axis.....")
         self._make_range_gene(mdata=mdata,FDR_threshold=FDR_threshold,time_col=time_col,feature_key=feature_key)
-        self.permute_point_gene(mdata,n=n_interval)
+        self._permute_point_gene(mdata,n=n_interval)
         _test_gene_binom(mdata)
         _test_whole_gene(mdata)
         num_deg=np.sum(pseudobulk.var["overall_gene_p"]<FDR_threshold)
         print(f"{num_deg} differential genes were detected!")
 
     def plotDE(self,
-        mdata: MuData,genes:list | None=None,
+        mdata: MuData,
+        genes:list | None=None,
         row_cluster:bool = False,
         show_rownames:bool = False,
         show_colnames:bool = False,
@@ -1294,6 +1178,36 @@ class Tdiff:
         pseudotime_cmap:str | None = "jet",
         row_split=None,**kwarg
         ):
+        """Plot heatmap to display differential gene expression between two group. Heatmap were generated with **pyComplexHeatmap**.
+
+        .. seealso::
+            - See :doc:`../../../tutorial/step3_DE` for how to detect pseudotemporal
+            differential genes.
+
+        Parameters
+        ------------
+            mdata
+                MuData object has been processed using the 'tdiff.de' pipeline.
+            genes
+                A list of genes to plot. If not specific, we plot all significant genes. (default: None)
+            row_cluster
+                Whether to cluster row in heatmap. (default: False)
+            show_rownames
+                Whether to display gene name on the side. (default: False)
+            show_colnames
+                Whether to display pseudotime value on the bottom. (default: False)
+            feature_key
+                If input data is MuData, specify key to cell-level AnnData object. (default: 'rna')
+            row_split_gap
+                Gap between row split. (default: '1')
+            row_split
+                Genes category.pd.Series or pd.DataFrame, used to split rows or rows into subplots. 
+                We recommend to use split_gene function to split genes base on expression profile or stage.
+
+        Returns:
+        ---------------
+            Nothing. Plot four-panel heatmap.
+        """
         try:
             pseudobulk=mdata["pseudobulk"]
         except KeyError:
@@ -1376,19 +1290,27 @@ class Tdiff:
         fix_libsize=False,
         njob : int =-1
     ):
-        """Performs differential abundance testing on neighbourhoods using QLF test implementation as implemented in edgeR.
+        """Performs differential expression testing on neighbourhoods using QLF test implementation as implemented in edgeR.
 
         Parameters
-            mdata: MuData object
-            design: Formula for the test, following glm syntax from R (e.g. '~ condition').
+        --------------------
+            mdata
+                MuData object
+            design
+                Formula for the test, following glm syntax from R (e.g. '~ condition').
                     Terms should be columns in `tdata[feature_key].obs`.
-            model_contrasts: A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
+            model_contrasts
+                A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
                             If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
-            subset_samples: subset of samples (obs in `tdata['tdiff']`) to use for the test. Defaults to None.
-            add_intercept: whether to include an intercept in the model. If False, this is equivalent to adding + 0 in the design formula. When model_contrasts is specified, this is set to False by default. Defaults to True.
-            feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
+            subset_samples
+                subset of samples (obs in `tdata['tdiff']`) to use for the test. Defaults to None.
+            add_intercept
+                whether to include an intercept in the model. If False, this is equivalent to adding + 0 in the design formula. When model_contrasts is specified, this is set to False by default. Defaults to True.
+            feature_key
+                If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
 
         Returns:
+        ------------------------
             None, modifies `tdata['tdiff']` in place, adding the results of the DA test to `.var`:
             - `logFC` stores the log fold change in cell abundance (coefficient from the GLM)
             - `PValue` stores the p-value for the QLF test before multiple testing correction
@@ -1530,7 +1452,7 @@ class Tdiff:
             return(res, mean_df)
         print("Using edgeR to find DEG......")
         #results = joblib.Parallel(njobs=njob)(joblib.delayed(da)(i) for i in tqdm(range(10)))
-        results = Parallel(njobs=njob)(delayed(da)(i) for i in tqdm(range(nhoods.shape[1])))
+        results = Parallel(n_jobs=njob)(delayed(da)(i) for i in tqdm(range(nhoods.shape[1])))
         res_df = pd.DataFrame()
         res_df_cpm=pd.DataFrame()
         # Merge DataFrames from the dictionary one by one, handling None values
@@ -1612,7 +1534,7 @@ class Tdiff:
             tdiff.varm[var2]=_mergeVar(varDf,group2.T)
             
             
-    def makeSPFDR(self,
+    def _makeSPFDR(self,
                   mdata: MuData,
                  p_df= None,
                   njob: int = -1,
@@ -1653,7 +1575,7 @@ class Tdiff:
         num_jobs = njob  # Use all available cores, adjust as needed
         print("add spatial FDR......")
         # Use Parallel from joblib to parallelize the processing
-        results = Parallel(njobs=njob)(delayed(process_column)(i) for i in tqdm(range(p_df.shape[1])))
+        results = Parallel(n_jobs=njob)(delayed(process_column)(i) for i in tqdm(range(p_df.shape[1])))
         
         # Extract results and fill the DataFrame
         for keep_nhoods, varIndex, adjp in results:
@@ -1671,7 +1593,7 @@ class Tdiff:
         return(spFDRDf)
 
     
-    def makeShuffleDA(self,
+    def _makeShuffleDA(self,
                      mdata:MuData,
                      design: str,
                      times: int = 3,
@@ -1701,7 +1623,7 @@ class Tdiff:
                                        fix_libsize= fix_libsize,
                                        njob=njob)
             print(f"Making FDR")
-            res_null_Dict[i]= self.makeSPFDR(mdata=mdata,
+            res_null_Dict[i]= self._makeSPFDR(mdata=mdata,
                  p_df= res_null,
                  njob= njob,
                  shuffle= True) 
@@ -1758,7 +1680,7 @@ class Tdiff:
         sample_adata.varm["null_mean"]=_mergeVar(varDf,pseudobulk.varm["null_mean"].T)
 
 
-    def permute_point_gene(self,
+    def _permute_point_gene(self,
                            mdata: MuData,
                             n:int = 100,
                           ):
@@ -1846,16 +1768,24 @@ class Tdiff:
         """Performs differential expression testing on neighbourhoods using QLF test implementation as implemented in edgeR.
 
         Parameters
-            mdata: MuData object
-            design: Formula for the test, following glm syntax from R (e.g. '~ condition').
+        -----------------------
+            mdata
+                MuData object
+            design
+                Formula for the test, following glm syntax from R (e.g. '~ condition').
                     Terms should be columns in `tdata[feature_key].obs`.
-            model_contrasts: A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
+            model_contrasts
+                A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
                             If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
-            subset_samples: subset of samples (obs in `tdata['tdiff']`) to use for the test. Defaults to None.
-            add_intercept: whether to include an intercept in the model. If False, this is equivalent to adding + 0 in the design formula. When model_contrasts is specified, this is set to False by default. Defaults to True.
-            feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
+            subset_samples
+                subset of samples (obs in `tdata['tdiff']`) to use for the test. Defaults to None.
+            add_intercept
+                whether to include an intercept in the model. If False, this is equivalent to adding + 0 in the design formula. When model_contrasts is specified, this is set to False by default. Defaults to True.
+            feature_key
+                If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
 
         Returns:
+        -------------------------------
             None, modifies `tdata['tdiff']` in place, adding the results of the DA test to `.var`:
             - `logFC` stores the log fold change in cell abundance (coefficient from the GLM)
             - `PValue` stores the p-value for the QLF test before multiple testing correction
@@ -1972,20 +1902,21 @@ class Tdiff:
         self,
         mdata: MuData,
         feature_key: str | None = "rna",
-        fix_libsize=False,
+        fix_libsize: bool= False,
         njob : int =-1
     ):
         """permute expression matrix
     
         Parameters
-            mdata: MuData object
-            design: Formula for the test, following glm syntax from R (e.g. '~ condition').
-                    Terms should be columns in `tdata[feature_key].obs`.
-            model_contrasts: A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
-                            If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
-            subset_samples: subset of samples (obs in `tdata['tdiff']`) to use for the test. Defaults to None.
-            add_intercept: whether to include an intercept in the model. If False, this is equivalent to adding + 0 in the design formula. When model_contrasts is specified, this is set to False by default. Defaults to True.
-            feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
+        ------------------
+            mdata
+                MuData object
+            feature_key
+                If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
+            fix_libsize
+                Whether to fix library size in edgeR.
+            njob
+                Number of job to parallel
     
         Returns:
             None, modifies `tdata['tdiff']` in place, adding the results of the DA test to `.var`:
@@ -2043,7 +1974,7 @@ class Tdiff:
         resDict={}
         print("Using edgeR to find CPM......")
         #results = joblib.Parallel(njobs=njob)(joblib.delayed(da)(i) for i in tqdm(range(10)))
-        results = Parallel(njobs=njob)(delayed(da)(i) for i in tqdm(range(nhoods.shape[1])))
+        results = Parallel(n_jobs=njob)(delayed(da)(i) for i in tqdm(range(nhoods.shape[1])))
 
         res_df = pd.DataFrame()
         
@@ -2098,7 +2029,7 @@ class Tdiff:
         tdiff.uns["cpm_dict"]=permute_point_dict
 
         
-    def process_attr2_value(self,attr2_value, attr1, attr2, whole_cpm, var_names, range_data, n):
+    def _process_attr2_value(self,attr2_value, attr1, attr2, whole_cpm, var_names, range_data, n):
         logic = [s == attr2_value for s in attr2]
         cpm_i = whole_cpm.iloc[:, logic]
         cpm_i.columns = list(compress(attr1, logic))
@@ -2150,8 +2081,8 @@ class Tdiff:
     
         permute_point_dict = {}
     
-        results = Parallel(njobs=njobs)(
-            delayed(self.process_attr2_value)(attr2_value, attr1, attr2, whole_cpm, var_names, range_data, n)
+        results = Parallel(n_jobs=njobs)(
+            delayed(self._process_attr2_value)(attr2_value, attr1, attr2, whole_cpm, var_names, range_data, n)
             for attr2_value in tqdm(set(attr2))
         )
     
@@ -2170,14 +2101,20 @@ class Tdiff:
         """perform CPM in all sample
     
         Parameters
-            mdata: MuData object
-            design: Formula for the test, following glm syntax from R (e.g. '~ condition').
+        ----------------------
+            mdata
+                MuData object
+            design
+                Formula for the test, following glm syntax from R (e.g. '~ condition').
                     Terms should be columns in `tdata[feature_key].obs`.
-            model_contrasts: A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
+            model_contrasts
+                A string vector that defines the contrasts used to perform DA testing, following glm syntax from R (e.g. "conditionDisease - conditionControl").
                             If no contrast is specified (default), then the last categorical level in condition of interest is used as the test group. Defaults to None.
-            feature_key: If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
+            feature_key
+                If input data is MuData, specify key to cell-level AnnData object. Defaults to 'rna'.
     
         Returns:
+        -------------------------
             None, modifies `tdata['tdiff']` in place, adding the results of the DA test to `.var`:
             - `logFC` stores the log fold change in cell abundance (coefficient from the GLM)
             - `PValue` stores the p-value for the QLF test before multiple testing correction
@@ -2232,7 +2169,7 @@ class Tdiff:
         resDict={}
         print("Using edgeR to find CPM......")
         #results = joblib.Parallel(njobs=njob)(joblib.delayed(da)(i) for i in tqdm(range(10)))
-        results = Parallel(njobs=njobs)(delayed(da)(i) for i in tqdm(range(len(indexCell))))
+        results = Parallel(n_jobs=njobs)(delayed(da)(i) for i in tqdm(range(len(indexCell))))
         
         res_df = pd.DataFrame()
         

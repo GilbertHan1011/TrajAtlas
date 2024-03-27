@@ -77,16 +77,6 @@ Methods table
 
 
     
-    ~TrajAtlas.TrajDiff.Tdiff.makeSPFDR
-    
-
-
-    
-    ~TrajAtlas.TrajDiff.Tdiff.makeShuffleDA
-    
-
-
-    
     ~TrajAtlas.TrajDiff.Tdiff.make_nhoods
     
 
@@ -117,37 +107,12 @@ Methods table
 
 
     
-    ~TrajAtlas.TrajDiff.Tdiff.permute_point_gene
-    
-
-
-    
-    ~TrajAtlas.TrajDiff.Tdiff.permute_test_point
-    
-
-
-    
-    ~TrajAtlas.TrajDiff.Tdiff.permute_test_window
-    
-
-
-    
     ~TrajAtlas.TrajDiff.Tdiff.plotDAheatmap
     
 
 
     
     ~TrajAtlas.TrajDiff.Tdiff.plotDE
-    
-
-
-    
-    ~TrajAtlas.TrajDiff.Tdiff.process_attr2_value
-    
-
-
-    
-    ~TrajAtlas.TrajDiff.Tdiff.test_whole
     
 
 
@@ -233,18 +198,6 @@ load
 
 
 
-makeSPFDR
-^^^^^^^^^
-.. automethod:: Tdiff.makeSPFDR
-
-
-
-makeShuffleDA
-^^^^^^^^^^^^^
-.. automethod:: Tdiff.makeShuffleDA
-
-
-
 make\_nhoods
 ^^^^^^^^^^^^
 .. automethod:: Tdiff.make_nhoods
@@ -281,24 +234,6 @@ permute\_point\_cpm\_parallel
 
 
 
-permute\_point\_gene
-^^^^^^^^^^^^^^^^^^^^
-.. automethod:: Tdiff.permute_point_gene
-
-
-
-permute\_test\_point
-^^^^^^^^^^^^^^^^^^^^
-.. automethod:: Tdiff.permute_test_point
-
-
-
-permute\_test\_window
-^^^^^^^^^^^^^^^^^^^^^
-.. automethod:: Tdiff.permute_test_window
-
-
-
 plotDAheatmap
 ^^^^^^^^^^^^^
 .. automethod:: Tdiff.plotDAheatmap
@@ -308,18 +243,6 @@ plotDAheatmap
 plotDE
 ^^^^^^
 .. automethod:: Tdiff.plotDE
-
-
-
-process\_attr2\_value
-^^^^^^^^^^^^^^^^^^^^^
-.. automethod:: Tdiff.process_attr2_value
-
-
-
-test\_whole
-^^^^^^^^^^^
-.. automethod:: Tdiff.test_whole
 
 
 

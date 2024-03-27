@@ -20,6 +20,5 @@ With this module, users are able to:
 
     model.ProjectData
     model.label_transfer
-    model.gene_trends
     model.pseduo_predict
 
