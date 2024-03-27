@@ -21,6 +21,7 @@ except ModuleNotFoundError:
 
 location = os.path.dirname(os.path.realpath(__file__))
 NMFfilePath = os.path.join(location, '..','datasets', "NMF_varGene.csv")
+avgLoadingFilePath=os.path.join(location, '..','datasets', "NMF_avg_loading.csv")
 
 from TrajAtlas.TrajDiff.trajDiff import Tdiff
 tdiff = Tdiff()
@@ -125,7 +126,7 @@ def getTrajExpression(data: MuData | AnnData,
                                                   group_col=group_col,time_col=time_col,njob=njob,min_cell=min_cell)
     wholeCpm=tdiff.make_whole_cpm(mdata)
     tdiff._make_range(mdata,only_range=True)
-    tdiff.permute_point_cpm_parallel(mdata)
+    tdiff.permute_point_cpm_parallel(mdata,njob=njob)
     return(mdata)
 
 @d.dedent
@@ -262,3 +263,42 @@ def plotGeneModule(
                     verbose=0,label_side='left',label_kws={'horizontalalignment':'right'})
     pch.ClusterMapPlotter(expDf.loc[geneModule], row_cluster=False, 
                           col_cluster=False,cmap="RdBu_r",show_rownames=True,top_annotation=col_ha,**kwargs)
+
+
+def _infering_activity_single(avgLoading_common, loading):
+    intersectGene=np.intersect1d(avgLoading_common.index,loading.index)
+    # Select the common genes from avgLoading and loadings
+    avgLoading_common = avgLoading_common.loc[intersectGene]
+    loading = loading.loc[intersectGene]
+
+    # Calculate the correlation matrix
+    avgLoadingDict={}
+    for i in range(loading.shape[1]):
+        avgLoadingDict[i]=avgLoading_common.apply(loading.iloc[:,i].corr).abs()
+    avgLoadingDf=pd.DataFrame(avgLoadingDict)
+    return(avgLoadingDf)
+
+def infering_activity(
+    mdata: MuData, 
+    avgLoadingPath : str=None
+    ):
+    try:
+        factor_dict=mdata["tdiff"].uns["factor_dict"]
+    except KeyError:
+        print("tdata should be a MuData object with factor_dict in mdata['tdiff'].uns - please run find_gene_module first")
+        raise
+    if avgLoadingPath==None:
+        avgLoadingPath=avgLoadingFilePath
+    avgLoading=pd.read_csv(avgLoadingPath,index_col=0)
+
+    activityDict={}
+    for key in factor_dict.keys():
+        factors=factor_dict[key]
+        activityDf = _infering_activity_single(avgLoading_common=avgLoading,loading=factors)
+        activityMax = activityDf.max(axis = 1)
+        activityMax= pd.DataFrame(activityMax)
+        activityDict[key] = activityMax
+    activity = pd.concat(activityDict, axis=1)
+    activity.columns=factor_dict.keys()
+    mdata["tdiff"].uns["TRAV_activity"]=activity
+    return(activity)

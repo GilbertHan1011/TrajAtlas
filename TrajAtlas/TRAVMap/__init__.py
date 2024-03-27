@@ -3,5 +3,6 @@ from TrajAtlas.TRAVMap.genemodule import find_gene_module,getTrajExpression,plot
 __all__ = [
     "getTrajExpression",
     "find_gene_module",
-    "plotGeneModule"
+    "plotGeneModule",
+    "infering_activity"
 ]

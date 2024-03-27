@@ -14,6 +14,7 @@ import joblib
 from TrajAtlas.utils._docs import d
 #import lightgbm
 import os
+from mudata import MuData
 
 
 try:
@@ -619,3 +620,34 @@ def gene_trends(
 
     if return_models:
         return all_models
+
+def MergeTRAVMap(tvmap1 : MuData,
+             tvmap2 : MuData,
+             include_trav : bool = False):
+    corr1=tvmap1["corr"]
+    expr1=tvmap1["expr"]
+    peak1=tvmap1["peak"]
+    corr2=tvmap2["corr"]
+    expr2=tvmap2["expr"]
+    peak2=tvmap2["peak"]
+    
+    corrConbined=sc.concat([corr1,corr2])
+    exprConbined=sc.concat([expr1,expr2])
+    peakConbined=sc.concat([peak1,peak2])
+    if include_trav:
+        trav1=tvmap1["TRAV"]
+        trav2=tvmap2["TRAV"]
+        travConbined=sc.concat([trav1,trav2])
+        tvmapConbined=mu.MuData({"corr":corrConbined, "expr": exprConbined,
+                                 "peak":peakConbined,"TRAV":travConbined})
+    else:
+        tvmapConbined=mu.MuData({"corr":corrConbined, "expr": exprConbined,
+                                 "peak":peakConbined})
+        
+    obs1 = tvmap1.obs
+    obs1["old_or_new"]="old"
+    obs2 = tvmap2.obs
+    obs2["old_or_new"]="new"
+    obsConcat = pd.concat([obs1,obs2])
+    tvmapConbined.obs=obsConcat
+    return(tvmapConbined)

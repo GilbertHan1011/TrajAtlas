@@ -2,10 +2,8 @@
   <img width="300" src="img/logo.png">
 </p>
 
-`<h1>` `<p align="center">`
-    Unraveling multi-scale differentiation heterogeneity with trajectory-centric framework
+<h1><p align="center">Unraveling multi-scale differentiation heterogeneity with trajectory-centric framework</p></h1>
 
-`</p>` `</h1>`
 
 TrajAtlas is a trajectory-centric framework designed to uncover heterogeneity among cells, genes, and gene modules across large-scale trajectories. It is applicable to, but not limited to, osteogenesis datasets. This repository contains the following modules:
 
