@@ -18,12 +18,15 @@ Requires-Dist: joblib>=1.2.0
 Requires-Dist: pandas==2.0.0
 Requires-Dist: scvi>=0.6.8
 Requires-Dist: scarches>=0.5.6
-Requires-Dist: tensorflow>=2.11.0
 Requires-Dist: scanpy>=1.9.1
 Requires-Dist: mudata>=0.2.3
 Requires-Dist: tqdm>=4.65.0
 Requires-Dist: statsmodels>=0.14.0
 Requires-Dist: PyComplexHeatmap>=1.6.4
+Requires-Dist: lightgbm
+Requires-Dist: scikit-learn
+Requires-Dist: mudata
+Requires-Dist: rpy2
 
 <p align="center">
   <img width="300" src="img/logo.png">

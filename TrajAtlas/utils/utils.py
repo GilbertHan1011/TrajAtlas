@@ -9,7 +9,6 @@ import scanpy as sc
 import PyComplexHeatmap as pch
 
 
-
 def process_subset(i, j, sampleDict, lineageDict, adata, timeDict, timeBin, cell_threshold):
     agg_dict = {gene: "mean" for gene in adata.var_names}
     subsetCell = list(set(sampleDict[i]) & set(lineageDict[j]))
@@ -57,7 +56,7 @@ def process_subset(i, j, sampleDict, lineageDict, adata, timeDict, timeBin, cell
     return pearsonCorrDf, maxRowDf, sumValDf
 
 def getAttribute(adata,lineage: list or None = ["Fibroblast", "LepR_BMSC", "MSC", "Chondro"],
-                 peudotime_key="pseduoPred",n_jobs=-1,cell_threshold: int or None=40):
+                 peudotime_key="pseduoPred",njobs=-1,cell_threshold: int or None=40):
     adata.obs[['pred_lineage_lepr', 'pred_lineage_msc', 'pred_lineage_chondro',"pred_lineage_fibro"]]=adata.obs[['pred_lineage_lepr', 'pred_lineage_msc', 'pred_lineage_chondro',"pred_lineage_fibro"]].astype("bool")
     lineageDict={"Chondro":adata.obs.index[adata.obs["pred_lineage_chondro"]],
             "LepR_BMSC":adata.obs.index[adata.obs["pred_lineage_lepr"]],
@@ -85,7 +84,7 @@ def getAttribute(adata,lineage: list or None = ["Fibroblast", "LepR_BMSC", "MSC"
         dfs=pd.concat([dfs,keyDf])
     key_pairs= [(dfs['sample'].iloc[i], dfs['Lineage'].iloc[i]) for i in range(dfs.shape[0])]
     partial_process_subset = partial(process_subset, sampleDict=sampleDict, lineageDict=lineageDict, adata=adata, timeDict=timeDict, timeBin=timeBin, cell_threshold=cell_threshold)
-    results = Parallel(n_jobs=n_jobs)(delayed(partial_process_subset)(*key_pair) for key_pair in tqdm(key_pairs))
+    results = Parallel(n_jobs=njobs)(delayed(partial_process_subset)(*key_pair) for key_pair in tqdm(key_pairs))
     pearson_results = [result[0] for result in results if result is not None]
     peak_results = [result[1] for result in results if result is not None]
     expr_results = [result[2] for result in results if result is not None]
