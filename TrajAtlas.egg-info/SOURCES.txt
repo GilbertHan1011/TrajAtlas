@@ -7,9 +7,14 @@ TrajAtlas.egg-info/SOURCES.txt
 TrajAtlas.egg-info/dependency_links.txt
 TrajAtlas.egg-info/requires.txt
 TrajAtlas.egg-info/top_level.txt
+TrajAtlas/TRAVMap/__init__.py
+TrajAtlas/TRAVMap/genemodule.py
+TrajAtlas/TRAVMap/gm1.py
 TrajAtlas/TrajDiff/__init__.py
 TrajAtlas/TrajDiff/trajDiff.py
-TrajAtlas/TrajDiff/trajDiff_1.py
+TrajAtlas/TrajDiff/trajdiff_utils.py
+TrajAtlas/datasets/NMF_avg_loading.csv
+TrajAtlas/datasets/NMF_varGene.csv
 TrajAtlas/datasets/pred_obs.csv
 TrajAtlas/datasets/rf_genes.csv
 TrajAtlas/datasets/trajMap_reference_1.h5ad
@@ -17,8 +22,16 @@ TrajAtlas/datasets/varGene_1500.csv
 TrajAtlas/datasets/variable_2000.csv
 TrajAtlas/datasets/pseduoPred/lightGBM_pred.pkl
 TrajAtlas/datasets/scanvi_model/model.pt
+TrajAtlas/logging/__init__.py
+TrajAtlas/logging/_logging.py
 TrajAtlas/model/__init__.py
+TrajAtlas/model/project copy.py
 TrajAtlas/model/project.py
+TrajAtlas/settings/__init__.py
+TrajAtlas/settings/_settings.py
 TrajAtlas/utils/__init__.py
+TrajAtlas/utils/_docs.py
+TrajAtlas/utils/_env.py
 TrajAtlas/utils/utils.py
 docs/source/conf.py
+docs/source/_ext/_typed_returns.py
