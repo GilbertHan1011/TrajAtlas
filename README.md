@@ -25,3 +25,9 @@ Please refer to the [documentation](https://trajatlas.readthedocs.io/en/stable/)
 ## Installation
 
 You need to have Python 3.8 or newer installed on your system. If you don't have Python installed, we recommend installing [Mamba](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html).
+
+You can install **TrajAtlas** with following codes
+
+```bash
+pip install TrajAtlas
+```

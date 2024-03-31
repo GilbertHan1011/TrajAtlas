@@ -14,7 +14,7 @@ Development Version
 -------------------
 To stay up-to-date with the newest version, run::
 
-    pip install git+https://github.com/GilbertHan1011/TrajAtlas.git@main
+    pip install git+https://github.com/GilbertHan1011/TrajAtlas.git@master
 
 .. _`Mamba`: https://mamba.readthedocs.io/en/latest/installation.html
 .. _`issue`: https://github.com/GilbertHan1011/TrajAtlas/issues/new

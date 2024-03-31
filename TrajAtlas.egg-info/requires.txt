@@ -5,6 +5,7 @@ joblib>=1.2.0
 pandas==2.0.0
 scvi>=0.6.8
 scarches>=0.5.6
+tensorflow>=2.13.0
 scanpy>=1.9.1
 mudata>=0.2.3
 tqdm>=4.65.0
@@ -12,5 +13,5 @@ statsmodels>=0.14.0
 PyComplexHeatmap>=1.6.4
 lightgbm
 scikit-learn
-mudata
 rpy2
+optax==0.1.5
