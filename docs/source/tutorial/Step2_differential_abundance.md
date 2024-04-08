@@ -1,8 +1,3 @@
-```python
-import sys
-sys.path.append("../../../../TrajAtlas/")
-```
-
 # Differential Abundance with TrajAtlas
 
 ## Setup
