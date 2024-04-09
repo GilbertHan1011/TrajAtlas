@@ -8,6 +8,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+.verysync/
 build/
 develop-eggs/
 dist/
