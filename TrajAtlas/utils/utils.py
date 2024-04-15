@@ -1,3 +1,4 @@
+from __future__ import annotations
 from joblib import Parallel, delayed
 from functools import partial
 from tqdm import tqdm
@@ -7,6 +8,8 @@ import numpy as np
 import muon as mu
 import scanpy as sc
 import PyComplexHeatmap as pch
+from anndata import AnnData
+import matplotlib.pyplot as plt
 
 
 def process_subset(i, j, sampleDict, lineageDict, adata, timeDict, timeBin, cell_threshold):
@@ -139,3 +142,22 @@ def trajDotplot(geneTb,col_split:int or pd.Series or pd.DataFrame or None, ratio
                                marker={'Start':'o','Middle':'D','End':'s'},col_split=col_split,
                                  ratio=ratio,show_rownames=show_rownames,
                                   spines=spines,show_colnames=show_colnames,**kwargs)
+
+
+
+def split_umap(
+    adata:AnnData, 
+    split_by:str,
+    basis:str="X_umap",
+     ncol:int=2,
+     nrow=None,
+      **kwargs):
+    categories = adata.obs[split_by].cat.categories
+    if nrow is None:
+        nrow = int(np.ceil(len(categories) / ncol))
+    fig, axs = plt.subplots(nrow, ncol, figsize=(5*ncol, 4*nrow))
+    axs = axs.flatten()
+    for i, cat in enumerate(categories):
+        ax = axs[i]
+        sc.pl.embedding(adata[adata.obs[split_by] == cat], ax=ax, show=False, title=cat,basis = basis, **kwargs)
+    plt.tight_layout()

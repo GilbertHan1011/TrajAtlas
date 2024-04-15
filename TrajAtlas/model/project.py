@@ -270,9 +270,6 @@ def pseduo_predict(adata:AnnData,
         - See :doc:`../../../tutorial/1_OPCST_projecting` for how to
         projecting OPCST model to your datasets.
 
-    Each lineage is defined via its lineage weights. This function accepts any model based off
-    :class:`~cellrank.models.BaseModel` to fit gene expression, where we take the lineage weights
-    into account in the loss function.
 
     Parameters
     ----------
