@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: TrajAtlas
-Version: 0.1.3
+Version: 0.1.5
 Summary: TrajAtlas, a trajectory-centric framework reveals differentiation heterogenity among cells, genes, and gene modules
 Author-email: Gilbert Han <gilberthan1011@gmail.com>
 Project-URL: Homepage, https://github.com/GilbertHan1011/TrajAtlas
@@ -56,3 +56,9 @@ Please refer to the [documentation](https://trajatlas.readthedocs.io/en/stable/)
 ## Installation
 
 You need to have Python 3.8 or newer installed on your system. If you don't have Python installed, we recommend installing [Mamba](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html).
+
+You can install **TrajAtlas** with following codes
+
+```bash
+pip install TrajAtlas
+```

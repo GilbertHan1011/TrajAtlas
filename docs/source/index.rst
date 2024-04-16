@@ -2,7 +2,7 @@ Welcome to TrajAtlas' documentation!
 ==============================================
 
 **TrajAtlas** is a trajectory-centric framework for unnraveling multi-scale differentiation heterogeneity 
-across population-level trajectories. With TrajAtlas, you are able to explore heterogeneity among cells, genes, and
+across population-level trajectories. With **TrajAtlas**, you are able to explore heterogeneity among cells, genes, and
 gene modules across large-scale trajectories!
 
 To grasp the foundational concepts of TrajAtlas, please refer to the detailed information provided in :doc:`about/index`.
@@ -37,6 +37,9 @@ TrajAtlas' Key Applications
 
 - Projecting osteogenesis datasets to Differential Atlas and OPCST model, including:
    :doc:`Projecting osteogenesis datasets <tutorial/1_OPCST_projecting>`
+
+- Beyond Trajectory, including:
+   :doc:`TrajAtlas meets gene expression program <tutorial/4.15_GEP>`
 
 - … and much more, check out our :doc:`API <api/index>`
 
