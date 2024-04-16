@@ -87,7 +87,7 @@ def getAttributeGEP(
 
     .. seealso::
         - See :doc:`../../../tutorial/4.15_GEP` for how to
-        projecting OPCST model to your datasets.
+        identified gene expression program associated with differentiated genes.
 
     Parameters
     ----------
@@ -148,6 +148,7 @@ def getAttributeGEP(
     tvmap=mu.MuData({"corr":corrAdata, "expr": exprAdata,"peak":peakAdata})
     return(tvmap)
 
+@d.dedent
 def attrTTest(
     adata: AnnData,
     group1Name: List,
@@ -156,7 +157,7 @@ def attrTTest(
 
     .. seealso::
         - See :doc:`../../../tutorial/4.15_GEP` for how to
-        projecting OPCST model to your datasets.
+        identified gene expression program associated with differentiated genes.
 
     Parameters
     ----------
@@ -187,7 +188,36 @@ def attrTTest(
     results_df["logFC"] = np.array(np.log(group1.mean()/group2.mean()))
     return(results_df)
 
-def split_umap(adata, split_by, ncol=2, nrow=None, **kwargs):
+@d.dedent
+def split_umap(
+    adata: AnnData, 
+    split_by: str,
+    basis : str = "X_umap", 
+    ncol : int = 2,  
+    nrow=None, 
+    **kwargs):
+    """Create split view of gene expression on reduction.
+
+    .. seealso::
+        - See :doc:`../../../tutorial/4.15_GEP` for how to
+        identified gene expression program associated with differentiated genes.
+
+    Parameters
+    ----------
+        %(adata)s
+        split_by
+            Slot in :attr:`adata.obs <anndata.AnnData.obs>` to splited by
+        basis
+            Reduction name in :attr:`adata.obsm <anndata.AnnData.obsm>`
+        ncol
+            Number of column.
+        nrow
+            Number of row.
+        
+    Returns:
+        Nothing. Plot reduction with a view of gene expression splited by the interested covariate..
+
+    """
     categories = adata.obs[split_by].cat.categories
     if nrow is None:
         nrow = int(np.ceil(len(categories) / ncol))
@@ -195,5 +225,5 @@ def split_umap(adata, split_by, ncol=2, nrow=None, **kwargs):
     axs = axs.flatten()
     for i, cat in enumerate(categories):
         ax = axs[i]
-        sc.pl.draw_graph(adata[adata.obs[split_by] == cat], ax=ax, show=False, title=cat, **kwargs)
+        sc.pl.embedding(adata[adata.obs[split_by] == cat], basis = basis, ax=ax, show=False, title=cat, **kwargs)
     plt.tight_layout()
