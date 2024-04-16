@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: TrajAtlas
-Version: 0.1.4
+Version: 0.1.5
 Summary: TrajAtlas, a trajectory-centric framework reveals differentiation heterogenity among cells, genes, and gene modules
 Author-email: Gilbert Han <gilberthan1011@gmail.com>
 Project-URL: Homepage, https://github.com/GilbertHan1011/TrajAtlas
