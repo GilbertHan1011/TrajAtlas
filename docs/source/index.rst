@@ -73,5 +73,6 @@ We actively encourage any contribution! To get started, please check out the :do
 
    about/index
    about/team
+   about/cite
    GitHub <https://github.com/GilbertHan1011/TrajAtlas>
 
