@@ -1,6 +1,6 @@
-Citing CellRank
+Citing TrajAtlas
 ===============
-`Our work <https://www.biorxiv.org/content/10.1101/2024.05.28.596174v1.full>` has been posted on bioRxiv. If TrajAtlas is useful for your research, please consider citing our work as follows:
+`Our work <https://www.biorxiv.org/content/10.1101/2024.05.28.596174v1.full>`_ has been posted on bioRxiv. If TrajAtlas is useful for your research, please consider citing our work as follows:
 
 .. code-block:: bibtex
 
