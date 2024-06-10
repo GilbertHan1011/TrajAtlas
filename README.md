@@ -31,3 +31,7 @@ You can install **TrajAtlas** with following codes
 ```bash
 pip install TrajAtlas
 ```
+
+## Citation
+
+**TrajAtlas** recently has posted on bioRxiv. If **TrajAtlas** helps you, please cite our [work](https://www.biorxiv.org/content/10.1101/2024.05.28.596174v1.full).
