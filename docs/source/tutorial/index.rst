@@ -11,3 +11,4 @@ Tutorials
     step3_DE
     pseudotemporal_gene_module
     4.15_GEP
+    gssaxis
