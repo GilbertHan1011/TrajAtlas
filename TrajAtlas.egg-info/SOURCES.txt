@@ -29,7 +29,6 @@ TrajAtlas/model/emb.py
 TrajAtlas/model/project.py
 TrajAtlas/settings/__init__.py
 TrajAtlas/settings/_settings.py
-TrajAtlas/utils/GEP.py
 TrajAtlas/utils/__init__.py
 TrajAtlas/utils/_docs.py
 TrajAtlas/utils/_env.py

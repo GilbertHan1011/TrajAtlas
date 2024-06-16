@@ -140,7 +140,8 @@ adata=tja.model.substractLineageAdata(adata,["LepR_BMSC"])
 In our study, we extracted three characteristics from the pseudotemporal gene expression pattern: peak, correlation, and expression. We have demonstrated that these three characteristics can effectively reconstruct gene expression patterns. Utilizing these characteristics offers a method to visualize gene expression patterns across multiple trajectories.
 
 ```python
-tvMap=tja.utils.getAttribute(adata,lineage=["LepR_BMSC"],njobs=10)
+lineageCell = adata.obs_names[adata.obs["pred_lineage_lepr"]]
+tvMap=tja.utils.getAttributeBase(adata,axis_key="pseduoPred", sampleKey="sample",subsetCell=lineageCell,njob=10)
 ```
 
     0%|          | 0/10 [00:00<?, ?it/s][A

@@ -10,5 +10,6 @@ Other useful functions
     :toctree: _autosummary/utils
 
     utils.getAttributeGEP
+    utils.getAttributeBase
     utils.attrTTest
 
