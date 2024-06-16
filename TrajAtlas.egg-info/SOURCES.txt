@@ -33,6 +33,7 @@ TrajAtlas/utils/GEP.py
 TrajAtlas/utils/__init__.py
 TrajAtlas/utils/_docs.py
 TrajAtlas/utils/_env.py
+TrajAtlas/utils/attr_util.py
 TrajAtlas/utils/utils.py
 docs/source/conf.py
 docs/source/_ext/_typed_returns.py

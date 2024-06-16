@@ -135,7 +135,7 @@ From the figure above, it is evident that our datasets primarily consist of LepR
 adata=tja.model.substractLineageAdata(adata,["LepR_BMSC"])
 ```
 
-## Visualize pseudotemporal gene expression pattern across multiple trajectories.
+## Visualize pseudotemporal gene expression patterns across multiple trajectories.
 
 In our study, we extracted three characteristics from the pseudotemporal gene expression pattern: peak, correlation, and expression. We have demonstrated that these three characteristics can effectively reconstruct gene expression patterns. Utilizing these characteristics offers a method to visualize gene expression patterns across multiple trajectories.
 
