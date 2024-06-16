@@ -136,8 +136,7 @@ def getAttributeBase(
     """Get attribute (peak, expression, correlation) base on axis.
 
     .. seealso::
-        - See :doc:`../../../tutorial/1_OPCST_projecting` for how to
-        make trajecoty dotplot.
+        - See :doc:`../../../tutorial/1_OPCST_projecting` for how to make trajecoty dotplot.
 
     Parameters
     ----------
@@ -170,7 +169,7 @@ def getAttributeBase(
         selectCell = sampleDict[i]
         selectCell=np.intersect1d(selectCell,subsetCell)
         loopDf = _process_subset(adata,subsetCell=selectCell,subsetGene=subsetGene,
-                                timeDict=timeDict,cell_threshold=cell_threshold,njobs=njob, **kwargs)
+                                timeDict=timeDict,cell_threshold=cell_threshold,njobs=njobs, **kwargs)
         resDict[i] = loopDf
     tvMap = dict2Mudata(resDict)
     return(tvMap)

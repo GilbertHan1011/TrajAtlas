@@ -9,6 +9,10 @@ TrajAtlas is also available on PyPI::
 
     pip install TrajAtlas
 
+If you are working with osteogenesis scRNA datasets, you can install the extended version of TrajAtlas to project TrajAtlas onto your own datasets.
+    
+    pip install TrajAtlas[scarches]
+
 
 Development Version
 -------------------

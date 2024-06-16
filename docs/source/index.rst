@@ -40,6 +40,8 @@ TrajAtlas' Key Applications
 
 - Beyond Trajectory, including:
    :doc:`TrajAtlas meets gene expression program <tutorial/4.15_GEP>`
+   
+   :doc:`TrajAtlas meets gene set scoring <tutorial/gssaxis>`
 
 - … and much more, check out our :doc:`API <api/index>`
 
