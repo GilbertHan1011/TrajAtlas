@@ -25,6 +25,10 @@ If you are using gene set scoring for function inference, you can utilize TrajAt
 
    :doc:`TrajAtlas meets gene set scoring <tutorial/gssaxis>`
 
+If you have osteogenesis datasets, you can project your datasets onto our model.
+
+   :doc:`Projecting osteogenesis datasets <tutorial/1_OPCST_projecting>`
+
 To grasp the foundational concepts of TrajAtlas, please refer to the detailed information provided in :doc:`about/index`.
 
 .. image:: ../../img/Fig1_v2.png
