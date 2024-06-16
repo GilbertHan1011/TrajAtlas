@@ -23,6 +23,8 @@ except ModuleNotFoundError:
     print(
         "[bold yellow]scarches is not installed. Install with [green]pip install sca [yellow]to project your datasets to our Differetiation Atlas."
     )
+except Exception as e:
+    print(f"[bold yellow]You should check whether scarches have properly installed")
 
 
 location = os.path.dirname(os.path.realpath(__file__))
