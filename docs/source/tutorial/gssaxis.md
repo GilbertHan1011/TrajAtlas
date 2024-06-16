@@ -1,3 +1,5 @@
+# TrajAtlas meets Gene Set Scoring 
+
 ## Introduction
 
 When using gene set scoring algorithms like AUCells, you may wonder which genes in the gene set exhibit similar patterns to the overall trend. This capability can help you identify genes of interest within the gene set. TrajAtlas provides this functionality!
