@@ -5,11 +5,8 @@
 <h1><p align="center">Unraveling multi-scale differentiation heterogeneity with trajectory-centric framework</p></h1>
 
 
-TrajAtlas is a trajectory-centric framework designed to uncover heterogeneity among cells, genes, and gene modules across large-scale trajectories. It is applicable to, but not limited to, osteogenesis datasets. This repository contains the following modules:
-
-- model: Enables users to project their datasets onto our `Differentiation Atlas` and predict lineage paths and pseudotime in the `OPCST model`.
-- TrajDiff: Enable user to detect covariate-related differential cell abundance and genes along differentiation process across multiple trajectories.
-- TRAVMap: enable user to detect pseudotemporal gene module and identified Trajectory-related Replicable Axes of Variation (TRAV)
+The central idea of **TrajAtlas** revolves around axis-based analysis. Although initially designed for osteogenesis datasets, 
+it can be applied to almost any type of dataset as long as you have an "axis" (such as pseudotime or gene expression patterns).
 
 <p align="center">
   <img width="600" src="img/Fig1_v2.png">
@@ -21,6 +18,28 @@ Please refer to the [documentation](https://trajatlas.readthedocs.io/en/stable/)
 
 - [API documentation](https://trajatlas.readthedocs.io/en/stable/api/index.html)
 - [Tutorial](https://trajatlas.readthedocs.io/en/stable/tutorial/index.html)
+
+If you want to do pseudotime analysis, please check 
+
+
+   [Differential Abundance analysis](https://trajatlas.readthedocs.io/en/stable/tutorial/Step2_differential_abundance.html)
+
+   [Differential Expression analysis](https://trajatlas.readthedocs.io/en/stable/tutorial/step3_DE.html)
+
+
+If you are interested in gene expression programs, we have developed a pipeline based on it. Please check 
+
+  [TrajAtlas meets gene expression program](https://trajatlas.readthedocs.io/en/stable/tutorial/4.15_GEP.html)
+
+
+If you are using gene set scoring for function inference, you can utilize TrajAtlas to identify which genes are more significant within the gene sets.
+
+  [TrajAtlas meets gene set scoring](https://trajatlas.readthedocs.io/en/stable/tutorial/gssaxis.html)
+
+If you have osteogenesis datasets, you can project your datasets onto our model.
+
+   [Projecting osteogenesis datasets](https://trajatlas.readthedocs.io/en/stable/tutorial/1_OPCST_projecting.html)
+
 
 ## Installation
 
