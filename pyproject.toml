@@ -23,7 +23,7 @@ dependencies = [
 	"numpy>=1.23.5",
 	"scipy>=1.10.1",
 	"joblib>=1.2.0",
-	"pandas==2.0.0",
+	"pandas<2.0.0",
 	"scvi>=0.6.8",
 	"scanpy>=1.9.1",
 	"mudata>=0.2.3",
@@ -61,7 +61,7 @@ scarches = [
 source_pkgs = ["TrajAtlas"]
 
 [tool.setuptools.package-data]
-"TrajAtlas.datasets" = ["*.h5ad","*.csv"]
+"TrajAtlas.datasets" = ["*.h5ad","*.csv","*.joblib"]
 "TrajAtlas.datasets.scanvi_model" = ["*.pt"]
 "TrajAtlas.datasets.pseduoPred" = ["*.pkl"]
 

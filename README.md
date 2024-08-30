@@ -17,6 +17,7 @@ it can be applied to almost any type of dataset as long as you have an "axis" (s
 Please refer to the [documentation](https://trajatlas.readthedocs.io/en/stable/). In particular:
 
 - [API documentation](https://trajatlas.readthedocs.io/en/stable/api/index.html)
+- [Introduction](https://trajatlas.readthedocs.io/en/stable/introduction/index.html)
 - [Tutorial](https://trajatlas.readthedocs.io/en/stable/tutorial/index.html)
 
 If you want to do pseudotime analysis, please check 

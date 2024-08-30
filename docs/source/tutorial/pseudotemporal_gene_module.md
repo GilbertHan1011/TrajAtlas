@@ -13,7 +13,9 @@ import PyComplexHeatmap as pch
 import TrajAtlas as tja
 ```
 
+## About pseudotemporal gene modules
 
+To learn about pseudotemporal gene modules, please read [TRAV](../introduction/TRAVMap.md)
 
 ## Preprocess
 
