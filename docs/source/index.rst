@@ -29,7 +29,7 @@ If you have osteogenesis datasets, you can project your datasets onto our model.
 
    :doc:`Projecting osteogenesis datasets <tutorial/1_OPCST_projecting>`
 
-To grasp the foundational concepts of TrajAtlas, please refer to the detailed information provided in :doc:`about/index`.
+To grasp the foundational concepts of TrajAtlas, please refer to the detailed information provided in :doc:`introduction/index`.
 
 .. image:: ../../img/Fig1_v2.png
     :width: 600px
@@ -101,7 +101,7 @@ We actively encourage any contribution! To get started, please check out the :do
    :maxdepth: 3
    :hidden:
 
-   about/index
+   introduction/index
    about/team
    about/cite
    GitHub <https://github.com/GilbertHan1011/TrajAtlas>

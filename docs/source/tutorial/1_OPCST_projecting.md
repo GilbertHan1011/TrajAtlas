@@ -4,6 +4,8 @@
 
 We have recently developed a reference atlas for osteogenesis and constructed a model to reconstruct the transformation of various osteoprogenitor cells (OPCs) into osteoblasts. In this tutorial, we will demonstrate how to project osteogenic datasets onto our atlas and utilize our models for analysis.
 
+To learn about OPCs and Differentiation Atlas, please read [Differentiation Atlas](../introduction/Differentiation_Atlas.md)
+
 ## Import packages & data
 
 We utilized datasets obtained from GSE210584 for our study. In this research conducted by Kira Young, the investigation focused on age-related changes in the bone marrow microenvironment between young mice (2-4 months old) and middle-aged mice (12-14 months old). This dataset provided valuable insights into the age-related alterations in osteogenesis within the bone marrow.

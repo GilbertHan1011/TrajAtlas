@@ -12,10 +12,13 @@ sc.settings.verbosity = 3
 import matplotlib.pyplot as plt
 plt.rcParams["figure.figsize"] = (7, 7)
 ```
+## About
+
+To learn about TrajDiff, please read [TrajDiff](../introduction/TrajDiff.md)
 
 ## Datasets
 
-In this tutorial, we continue with the adata we created in OPCST projecting
+In this tutorial, we continue with the adata we created in OPCST projecting.
 
 
 ```python
