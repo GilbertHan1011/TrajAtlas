@@ -11,4 +11,5 @@ Tutorials
     step3_DE
     pseudotemporal_gene_module
     4.15_GEP
+    spaital_omic
     gssaxis

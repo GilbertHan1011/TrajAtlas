@@ -15,6 +15,7 @@ from typing import List
 from TrajAtlas.utils._docs import d
 import statsmodels.api as sm
 from statsmodels.formula.api import ols
+from statsmodels.stats.multitest import multipletests
 import warnings
 from statsmodels.tools.sm_exceptions import ValueWarning
 
@@ -39,6 +40,7 @@ def _process_gene(chunk, geneMat, gene_agg, varName, timeVal):
             sumValuesDict[geneName] = geneAggArr.sum()
 
     return [maxRowsDict, sumValuesDict, pearsonCorrDict]
+
 
 def _process_subset(adata, timeDict, subsetCell: list = None, subsetGene: List = None, num_bins = 10, 
                     cell_threshold = 40, njobs = -1):
@@ -96,12 +98,28 @@ def _process_subset(adata, timeDict, subsetCell: list = None, subsetGene: List =
     return pd.concat([peak, expr, corr], axis = 1)
 
 def _concat_results(resDict, key):
-    return pd.concat([resDict[result][key] for result in resDict.keys()], axis = 1, keys = resDict.keys())
+    if isinstance(next(iter(resDict.values())), list):
+        # If resDict contains lists of DataFrames, concatenate each list separately
+        concatenated = []
+        for sample, dfs in resDict.items():
+            concatenated.append(pd.concat([df[key] for df in dfs], axis=1, keys=range(len(dfs))))
+        return pd.concat(concatenated, axis=1, keys=resDict.keys())
+    else:
+        return pd.concat([resDict[result][key] for result in resDict.keys()], axis=1, keys=resDict.keys())
 
-def dict2Mudata(resDict):
+def flatten_multiindex(df):
+    df.columns = ['_'.join(map(str, col)) for col in df.columns]
+    return df
+
+def _dict2Mudata(resDict, bootstrap_iterations):
     peak = _concat_results(resDict, "peak")
     expr = _concat_results(resDict, "expr")
     corr = _concat_results(resDict, "corr")
+
+    # Flatten MultiIndex
+    peak = flatten_multiindex(peak)
+    expr = flatten_multiindex(expr)
+    corr = flatten_multiindex(corr)
 
     exprAdata = sc.AnnData(expr.T)
     peakAdata = sc.AnnData(peak.T)
@@ -111,14 +129,24 @@ def dict2Mudata(resDict):
     peakAdata.layers["raw"] = peakAdata.X
     corrAdata.layers["raw"] = corrAdata.X
 
-    corr_mod = pd.DataFrame(np.where(corr >= 0, np.sqrt(corr), -np.sqrt(-corr)), columns = corr.columns, index = corr.index)
-    expr_mod = expr.apply(lambda row: row / row.max(), axis = 1)
+    corr_mod = pd.DataFrame(np.where(corr >= 0, np.sqrt(corr), -np.sqrt(-corr)), columns=corr.columns, index=corr.index)
+    expr_mod = expr.apply(lambda row: row / row.max(), axis=1)
 
     exprAdata.layers["mod"] = expr_mod.T
     peakAdata.layers["mod"] = peak.T
     corrAdata.layers["mod"] = corr_mod.T
 
+    # Add two obs columns to all AnnData objects
+    if bootstrap_iterations > 0:
+        for adata in [peakAdata, corrAdata, exprAdata]:
+            adata.obs['sample'] = [col.rsplit('_', 1)[0] for col in adata.obs_names]
+            adata.obs['bootstrap'] = [col.rsplit('_', 1)[1] for col in adata.obs_names]
+    else:
+        for adata in [peakAdata, corrAdata, exprAdata]:
+            adata.obs['sample'] = adata.obs_names
+
     return mu.MuData({"corr": corrAdata, "expr": exprAdata, "peak": peakAdata})
+
 
 def getAttributeBase(
     adata: AnnData, 
@@ -128,6 +156,7 @@ def getAttributeBase(
     subsetGene: List = None, 
     cell_threshold: int = 40, 
     njobs: int = -1,
+    bootstrap_iterations: int = 0,
     **kwargs
 ):
     """Get attribute (peak, expression, correlation) base on axis.
@@ -148,6 +177,9 @@ def getAttributeBase(
             Minimal cells to keep 
         njobs
             number of cores to use
+        bootstrap_iterations
+            number of bootstrap iterations to perform. If 0, bootstrapping is not performed.
+
         
     Returns:
         MuData object which contains correlation, expression, peak modal.
@@ -163,11 +195,28 @@ def getAttributeBase(
     resDict = {}
     for sample in tqdm(sampleDict.keys(), desc = "Processing Samples"):
         selectCell = np.intersect1d(sampleDict[sample], subsetCell)
-        loopDf = _process_subset(adata, subsetCell = selectCell, subsetGene = subsetGene,
-                                 timeDict = timeDict, cell_threshold = cell_threshold, njobs = njobs, **kwargs)
-        resDict[sample] = loopDf
+        
+        if bootstrap_iterations == 0:
+            loopDf = _process_subset(adata, subsetCell = selectCell, subsetGene = subsetGene,
+                                     timeDict = timeDict, cell_threshold = cell_threshold,
+                                      njobs = njobs, **kwargs)
+            resDict[sample] = loopDf
+        else:
+            bootstrap_results = []
+            for b in range(bootstrap_iterations):
+                resampled_indices = np.random.choice(selectCell, size=len(selectCell), replace=True)
+                resampled_adata = adata[resampled_indices].copy()
+                resampled_adata.obs_names = [f"{name}_{j}" for j, name in enumerate(resampled_adata.obs_names)]
+                timeDict = resampled_adata.obs[axis_key].to_dict()
+                loopDf = _process_subset(resampled_adata, subsetCell = resampled_adata.obs_names, subsetGene = subsetGene,
+                                         timeDict = timeDict, cell_threshold = cell_threshold, njobs = njobs, **kwargs)
+                bootstrap_results.append(loopDf)
+            
+            resDict[sample] = bootstrap_results
 
-    return dict2Mudata(resDict)
+    return _dict2Mudata(resDict, bootstrap_iterations = bootstrap_iterations)
+
+
 
 @d.dedent
 def getAttributeGEP(
@@ -210,101 +259,36 @@ def getAttributeGEP(
 
     patternWhole = None
     for counter, pattern in enumerate(patternKey):
-        if bootstrap_iterations == 0:
-            patternLoop = getAttributeBase(
-                adata,
-                axis_key = pattern,
-                sampleKey = sampleKey,
-                subsetGene = featureDict[pattern],
-                njobs = njobs,
-                **kwargs
-            )
-            if counter == 0:
-                patternWhole = patternLoop.copy()
-            else:
-                patternWhole.mod["corr"] = sc.concat([patternWhole["corr"], patternLoop["corr"]], axis = 1)
-                patternWhole.mod["expr"] = sc.concat([patternWhole["expr"], patternLoop["expr"]], axis = 1)
-                patternWhole.mod["peak"] = sc.concat([patternWhole["peak"], patternLoop["peak"]], axis = 1)
+        #print("Processing pattern: ", pattern)
+        patternLoop = getAttributeBase(
+            adata,
+            axis_key = pattern,
+            sampleKey = sampleKey,
+            subsetGene = featureDict[pattern],
+            njobs = njobs,
+            bootstrap_iterations = bootstrap_iterations,
+            **kwargs
+        )
+        #print(patternLoop)
+        if counter == 0:
+            patternWhole = patternLoop.copy()
         else:
-            corr_bootstrap_list = []
-            expr_bootstrap_list = []
-            peak_bootstrap_list = []
-
-            for b in range(bootstrap_iterations):
-                resampled_indices = []
-                for sample in adata.obs[sampleKey].unique():
-                    sample_mask = adata.obs[sampleKey] == sample
-                    sample_indices = np.where(sample_mask)[0]
-                    resampled_sample = np.random.choice(sample_indices, size = len(sample_indices), replace = True)
-                    resampled_indices.extend(resampled_sample)
-
-                resampled_adata = adata[resampled_indices].copy()
-                resampled_adata.obs_names = [f"{name}_{j}" for j, name in enumerate(resampled_adata.obs_names)]
-
-                resampled_attributes = getAttributeBase(
-                    resampled_adata,
-                    axis_key = pattern,
-                    sampleKey = sampleKey,
-                    subsetGene = featureDict[pattern],
-                    njobs = njobs,
-                    **kwargs
-                )
-
-                for attr in ["corr", "expr", "peak"]:
-                    resampled_attributes[attr].obs["sample"] = resampled_attributes[attr].obs_names
-                    resampled_attributes[attr].obs_names = [f"{name}_bootstrap_{b}" for name in resampled_attributes[attr].obs_names]
-
-                corr_bootstrap_list.append(resampled_attributes["corr"])
-                expr_bootstrap_list.append(resampled_attributes["expr"])
-                peak_bootstrap_list.append(resampled_attributes["peak"])
-
-            patternWhole = mu.MuData({
-                "corr_bootstrap": sc.concat(corr_bootstrap_list, axis = 0),
-                "expr_bootstrap": sc.concat(expr_bootstrap_list, axis = 0),
-                "peak_bootstrap": sc.concat(peak_bootstrap_list, axis = 0)
-            })
+            patternWhole.mod["corr"] = sc.concat([patternWhole["corr"], patternLoop["corr"]], axis = 1,join="outer", merge="same")
+            patternWhole.mod["expr"] = sc.concat([patternWhole["expr"], patternLoop["expr"]], axis = 1,join="outer", merge="same")
+            patternWhole.mod["peak"] = sc.concat([patternWhole["peak"], patternLoop["peak"]], axis = 1,join="outer", merge="same")
 
     return patternWhole
 
-def getAttributeGEP_Bootstrap(
-    adata: AnnData,
-    featureKey: str = "pattern",
-    sampleKey: str = "sample",
-    patternKey: List = None,
-    cell_threshold: int = 5,
-    njobs: int = -1,
-    bootstrap_iterations: int = 100,  # Default to 100 iterations
-    **kwargs
-):
-    """
-    Wrapper function to perform bootstrapping on getAttributeGEP.
-    
-    Parameters
-    ----------
-    All parameters are same as getAttributeGEP.
-
-    Returns
-    -------
-    MuData object with bootstrapped attributes.
-    """
-    return getAttributeGEP(
-        adata = adata,
-        featureKey = featureKey,
-        sampleKey = sampleKey,
-        patternKey = patternKey,
-        cell_threshold = cell_threshold,
-        njobs = njobs,
-        bootstrap_iterations = bootstrap_iterations,
-        **kwargs
-    )
 
 @d.dedent
 def attrTTest(
     adata: AnnData,
     group1Name: List,
-    group2Name: List
+    group2Name: List,
+    alpha: float = 0.05,
+    method: str = 'fdr_bh'  # Method for multiple testing correction
 ):
-    """Perform t-test to attribute
+    """Perform t-test to attribute with FDR correction.
 
     .. seealso::
         - See :doc:`../../../tutorial/4.15_GEP` for how to
@@ -317,12 +301,16 @@ def attrTTest(
             Sample name of group1
         group2Name
             Sample name of group2
+        alpha
+            Significance level for FDR correction.
+        method
+            Method for multiple testing correction. Default is 'fdr_bh'.
 
     Returns:
-        Dataframe of t-test statics
+        Dataframe of t-test statistics with FDR-corrected p-values.
     """
-    corrDf = pd.DataFrame(adata.X, columns = adata.var_names, index = adata.obs_names)
-    corrDf = corrDf.loc[:, np.sum(corrDf == 0, axis = 0) < len(corrDf)]
+    corrDf = pd.DataFrame(adata.X, columns=adata.var_names, index=adata.obs_names)
+    corrDf = corrDf.loc[:, np.sum(corrDf == 0, axis=0) < len(corrDf)]
 
     group1 = corrDf.loc[group1Name]
     group2 = corrDf.loc[group2Name]
@@ -335,31 +323,41 @@ def attrTTest(
     results_df = pd.DataFrame(results)
     results_df["logFC"] = np.log(group1.mean() / group2.mean())
 
+    # Perform FDR correction
+    p_values = results_df['P-value'].values
+    reject, pvals_corrected, _, _ = multipletests(p_values, alpha=alpha, method=method)
+    results_df['P-value_corrected'] = pvals_corrected
+    results_df['Significant'] = reject
+
     return results_df
 
 @d.dedent
 def attrANOVA(
     adata: AnnData,
-    group_labels: List
+    group_labels: List,
+    alpha: float = 0.05,
+    method: str = 'fdr_bh'  # Method for multiple testing correction
 ):
-    """Perform one-way ANOVA to test for differences across multiple groups.
+    """Perform one-way ANOVA to test for differences across multiple groups with FDR correction.
 
     Parameters
     ----------
         %(adata)s
         group_labels
             A list where each element corresponds to the group label for each sample in `adata.obs_names`.
+        alpha
+            Significance level for FDR correction.
+        method
+            Method for multiple testing correction. Default is 'fdr_bh'.
 
     Returns:
-        DataFrame containing ANOVA F-statistics and P-values for each feature.
+        DataFrame containing ANOVA F-statistics and FDR-corrected p-values for each feature.
     """
-
-
     # Suppress specific warnings
     warnings.filterwarnings("ignore", category=ValueWarning)
     warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-    corr_df = pd.DataFrame(adata.X, index = adata.obs_names, columns = adata.var_names)
+    corr_df = pd.DataFrame(adata.X, index=adata.obs_names, columns=adata.var_names)
     corr_df['group'] = group_labels
 
     valid_feature_names = {}
@@ -370,21 +368,29 @@ def attrANOVA(
         valid_name = valid_name.replace('-', '_').replace('.', '_')
         valid_feature_names[feature] = valid_name
 
-    corr_df.rename(columns = valid_feature_names, inplace = True)
+    corr_df.rename(columns=valid_feature_names, inplace=True)
 
     results = []
     for feature in corr_df.columns[:-1]:  # Exclude the 'group' column
         try:
             formula = f'Q("{feature}") ~ C(group)'
-            model = ols(formula, data = corr_df).fit()
-            anova_table = sm.stats.anova_lm(model, typ = 2)
+            model = ols(formula, data=corr_df).fit()
+            anova_table = sm.stats.anova_lm(model, typ=2)
             f_stat = anova_table['F'].iloc[0]
             p_value = anova_table['PR(>F)'].iloc[0]
             results.append({'Feature': feature, 'F-statistic': f_stat, 'P-value': p_value})
         except Exception as e:
             print(f"Error processing feature {feature}: {e}")
 
-    return pd.DataFrame(results)
+    results_df = pd.DataFrame(results)
+
+    # Perform FDR correction
+    p_values = results_df['P-value'].values
+    reject, pvals_corrected, _, _ = multipletests(p_values, alpha=alpha, method=method)
+    results_df['P-value_corrected'] = pvals_corrected
+    results_df['Significant'] = reject
+
+    return results_df
 
 @d.dedent
 def attrTwoWayANOVA(
