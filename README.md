@@ -36,6 +36,7 @@ If you are interested in gene expression programs, we have developed a pipeline 
 If you are using gene set scoring for function inference, you can utilize TrajAtlas to identify which genes are more significant within the gene sets.
 
   [TrajAtlas meets gene set scoring](https://trajatlas.readthedocs.io/en/stable/tutorial/gssaxis.html)
+  [TrajAtlas meets spatial omic](https://trajatlas.readthedocs.io/en/stable/tutorial/spaital_omic.html)
 
 If you have osteogenesis datasets, you can project your datasets onto our model.
 

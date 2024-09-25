@@ -20,6 +20,10 @@ If you are interested in gene expression programs, we have developed a pipeline 
 
    :doc:`TrajAtlas meets gene expression program <tutorial/4.15_GEP>`
 
+The gene expression program is also a can be applied to spatial omic data. Please check 
+
+   :doc:`TrajAtlas meets spatial omic <tutorial/spaital_omic>`
+
 
 If you are using gene set scoring for function inference, you can utilize TrajAtlas to identify which genes are more significant within the gene sets.
 
