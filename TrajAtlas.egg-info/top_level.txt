@@ -2,3 +2,4 @@ TrajAtlas
 dist
 docs
 img
+notebooks

@@ -2,7 +2,7 @@ anndata>=0.8.0
 numpy>=1.23.5
 scipy>=1.10.1
 joblib>=1.2.0
-pandas==2.0.0
+pandas<2.0.0
 scvi>=0.6.8
 scanpy>=1.9.1
 mudata>=0.2.3

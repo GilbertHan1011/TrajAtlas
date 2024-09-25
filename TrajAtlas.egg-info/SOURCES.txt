@@ -15,6 +15,7 @@ TrajAtlas/TrajDiff/trajDiff.py
 TrajAtlas/TrajDiff/trajdiff_utils.py
 TrajAtlas/datasets/NMF_avg_loading.csv
 TrajAtlas/datasets/NMF_varGene.csv
+TrajAtlas/datasets/knn_transformer_model.joblib
 TrajAtlas/datasets/pred_obs.csv
 TrajAtlas/datasets/rf_genes.csv
 TrajAtlas/datasets/trajMap_reference_1.h5ad
