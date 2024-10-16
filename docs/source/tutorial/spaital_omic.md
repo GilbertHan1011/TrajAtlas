@@ -1,4 +1,4 @@
-# TrajAtlas meetsSpatial Omic
+# TrajAtlas meets Spatial Omic
 ## Setup
 
 Here, we load TrajAtlas software and our gingival atlas datasets.
